@@ -1,0 +1,23 @@
+{
+  "name": "acg-community",
+  "version": "1.0.0",
+  "description": "为化妆师，假毛造型师所做的社区",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wzj1228516103/acg-community.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/wzj1228516103/acg-community/issues"
+  },
+  "homepage": "https://github.com/wzj1228516103/acg-community#readme",
+  "dependencies": {
+    "mysql2": "^3.22.3"
+  }
+}
