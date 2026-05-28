@@ -1,82 +1,80 @@
 <template>
-  <div class="service-detail-page">
-    <div class="detail-container">
-      <div class="detail-main">
-        <div class="detail-left">
-          <div class="main-image">
-            <img :src="currentImage" :alt="service.name" />
-          </div>
-          <div v-if="imageList.length > 1" class="thumbnail-list">
-            <div
-              v-for="(img, index) in imageList"
-              :key="index"
-              class="thumbnail"
-              :class="{ active: index === currentImageIndex }"
-              @click="currentImageIndex = index"
-            >
-              <img :src="img" alt="" />
-            </div>
+  <div class="service-detail-page" v-loading="loading">
+    <div class="detail-container" v-if="!loading">
+      <div class="detail-left">
+        <div class="main-image">
+          <img :src="currentImage" :alt="service.name" />
+          <div class="image-nav" v-if="imageList.length > 1">
+            <button @click="currentImageIndex = (currentImageIndex - 1 + imageList.length) % imageList.length" class="nav-btn">&lt;</button>
+            <button @click="currentImageIndex = (currentImageIndex + 1) % imageList.length" class="nav-btn">&gt;</button>
           </div>
         </div>
-
-        <div class="detail-right">
-          <h1 class="service-name">{{ service.name }}</h1>
-          <div class="service-price">¥{{ service.price }}</div>
-
-          <div class="info-row">
-            <span class="label">服务时长</span>
-            <span class="value">{{ service.duration }} 分钟</span>
+        <div class="thumbnail-list" v-if="imageList.length > 1">
+          <img v-for="(img, index) in imageList" :key="index" :src="img"
+               :class="{ active: index === currentImageIndex }" @click="currentImageIndex = index" />
+        </div>
+      </div>
+      <div class="detail-right">
+        <h1>{{ service.name }}</h1>
+        <div class="artist-info">
+          <el-avatar :size="48" :src="service.artistAvatar">
+            {{ service.artistNickname?.[0] || 'M' }}
+          </el-avatar>
+          <div class="artist-detail">
+            <span class="artist-name">{{ service.artistNickname || '化妆师' }}</span>
+            <el-tag size="small" type="success">认证化妆师</el-tag>
           </div>
-
-          <div class="artist-section">
-            <div class="artist-info">
-              <el-avatar :size="48" :src="service.artistAvatar">
-                {{ service.artistNickname?.[0] || 'M' }}
-              </el-avatar>
-              <div class="artist-detail">
-                <span class="artist-name">{{ service.artistNickname || '化妆师' }}</span>
-                <span class="artist-role">认证化妆师</span>
-              </div>
-            </div>
+        </div>
+        <div class="service-meta">
+          <div class="meta-item">
+            <span class="label">价格</span>
+            <span class="price">¥{{ service.price }}</span>
           </div>
-
-          <el-divider />
-
-          <h3 class="form-title">预约服务</h3>
+          <div class="meta-item">
+            <span class="label">时长</span>
+            <span>{{ service.duration }}分钟</span>
+          </div>
+        </div>
+        <div class="description">
+          <h3>服务描述</h3>
+          <p>{{ service.description }}</p>
+        </div>
+        <div class="booking-form">
+          <h3>预约服务</h3>
           <el-form ref="bookingFormRef" :model="bookingForm" :rules="bookingRules" label-width="80px">
+            <el-form-item label="选择时间" prop="slotId">
+              <div v-if="slotsLoading" class="slots-loading">
+                <el-icon class="is-loading"><Loading /></el-icon> 加载可用时间...
+              </div>
+              <div v-else-if="availableSlots.length === 0" class="no-slots">
+                暂无可用时间，请联系化妆师设置
+              </div>
+              <div v-else class="slot-list">
+                <div v-for="slot in availableSlots" :key="slot.id"
+                     :class="['slot-item', { active: bookingForm.slotId === slot.id }]"
+                     @click="bookingForm.slotId = slot.id">
+                  <div class="slot-date">{{ formatDate(slot.startTime) }}</div>
+                  <div class="slot-time">{{ formatTime(slot.startTime) }} - {{ formatTime(slot.endTime) }}</div>
+                </div>
+              </div>
+            </el-form-item>
             <el-form-item label="联系人" prop="contactName">
               <el-input v-model="bookingForm.contactName" placeholder="请输入联系人姓名" />
             </el-form-item>
             <el-form-item label="手机号" prop="phone">
               <el-input v-model="bookingForm.phone" placeholder="请输入手机号" />
             </el-form-item>
-            <el-form-item label="预约日期" prop="date">
-              <el-date-picker
-                v-model="bookingForm.date"
-                type="date"
-                placeholder="选择预约日期"
-                style="width: 100%"
-                :disabled-date="disabledDate"
-              />
-            </el-form-item>
-            <el-form-item label="备注" prop="notes">
-              <el-input v-model="bookingForm.notes" type="textarea" :rows="3" placeholder="请输入备注信息（可选）" />
+            <el-form-item label="备注">
+              <el-input v-model="bookingForm.notes" type="textarea" :rows="3"
+                placeholder="请输入备注信息（可选）" />
             </el-form-item>
             <el-form-item>
-              <el-button type="primary" size="large" round :loading="submitting" style="width: 100%;" @click="handleBooking">
+              <el-button type="primary" :loading="submitting" @click="handleBooking" round style="width: 100%">
                 立即预约
               </el-button>
             </el-form-item>
           </el-form>
         </div>
-      </div>
-
-      <div class="detail-bottom">
-        <el-tabs>
-          <el-tab-pane label="服务详情">
-            <div class="description-content" v-html="service.description || '暂无服务详情'" />
-          </el-tab-pane>
-        </el-tabs>
       </div>
     </div>
   </div>
@@ -86,8 +84,8 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { getMakeupServiceDetailApi } from '@/api/makeup'
-import { createOrderApi } from '@/api/order'
+import { Loading } from '@element-plus/icons-vue'
+import { getMakeupServiceDetailApi, createMakeupBookingApi, getAvailableSlotsApi } from '@/api/makeup'
 import { useUserStore } from '@/stores/user'
 
 const route = useRoute()
@@ -97,20 +95,22 @@ const userStore = useUserStore()
 const service = ref({})
 const currentImageIndex = ref(0)
 const loading = ref(true)
+const slotsLoading = ref(true)
 const submitting = ref(false)
 const bookingFormRef = ref()
+const availableSlots = ref([])
 
 const bookingForm = ref({
+  slotId: null,
   contactName: '',
   phone: '',
-  date: '',
   notes: '',
 })
 
 const bookingRules = {
+  slotId: [{ required: true, message: '请选择预约时间段', trigger: 'change' }],
   contactName: [{ required: true, message: '请输入联系人姓名', trigger: 'blur' }],
   phone: [{ required: true, message: '请输入手机号', trigger: 'blur' }],
-  date: [{ required: true, message: '请选择预约日期', trigger: 'change' }],
 }
 
 const imageList = computed(() => {
@@ -122,11 +122,22 @@ const imageList = computed(() => {
 })
 
 const currentImage = computed(() => {
-  return imageList.value[currentImageIndex.value] || 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=anime+cosplay+makeup+service+professional&image_size=landscape_4_3'
+  return imageList.value[currentImageIndex.value] || 'https://picsum.photos/seed/cosplay/640/400'
 })
 
-function disabledDate(time) {
-  return time.getTime() < Date.now() - 86400000
+function formatDate(dt) {
+  if (!dt) return ''
+  const d = new Date(dt)
+  const m = d.getMonth() + 1
+  const day = d.getDate()
+  const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
+  return `${m}月${day}日 ${weekdays[d.getDay()]}`
+}
+
+function formatTime(dt) {
+  if (!dt) return ''
+  const d = new Date(dt)
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
 }
 
 async function handleBooking() {
@@ -142,13 +153,12 @@ async function handleBooking() {
   }
   submitting.value = true
   try {
-    await createOrderApi({
+    await createMakeupBookingApi({
       serviceId: service.value.id,
+      slotId: bookingForm.value.slotId,
       contactName: bookingForm.value.contactName,
       phone: bookingForm.value.phone,
-      appointmentDate: bookingForm.value.date,
       notes: bookingForm.value.notes,
-      type: 'makeup',
     })
     ElMessage.success('预约成功！')
     router.push('/orders')
@@ -163,6 +173,14 @@ onMounted(async () => {
   try {
     const res = await getMakeupServiceDetailApi(route.params.id)
     service.value = res.data || {}
+    try {
+      const slotRes = await getAvailableSlotsApi(route.params.id)
+      availableSlots.value = slotRes.data || []
+    } catch {
+      availableSlots.value = []
+    } finally {
+      slotsLoading.value = false
+    }
   } catch {
     ElMessage.error('获取服务信息失败')
   } finally {
@@ -173,59 +191,65 @@ onMounted(async () => {
 
 <style lang="scss" scoped>
 .service-detail-page {
-  padding: 32px 24px 64px;
-  min-height: calc(100vh - 64px);
-  background: #f8fafc;
-}
-
-.detail-container {
+  padding: 32px 24px;
   max-width: 1200px;
   margin: 0 auto;
 }
 
-.detail-main {
-  display: flex;
+.detail-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 48px;
-  background: white;
-  border-radius: 20px;
-  padding: 32px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  margin-bottom: 32px;
-
-  @media (max-width: 768px) {
-    flex-direction: column;
-    gap: 24px;
-  }
 }
 
 .detail-left {
-  flex: 1;
-  max-width: 500px;
-
   .main-image {
-    width: 100%;
-    aspect-ratio: 4 / 3;
+    position: relative;
     border-radius: 16px;
     overflow: hidden;
-    background: #f3f4f6;
     margin-bottom: 16px;
 
     img {
       width: 100%;
-      height: 100%;
+      height: 400px;
       object-fit: cover;
+    }
+
+    .image-nav {
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      transform: translateY(-50%);
+      display: flex;
+      justify-content: space-between;
+      padding: 0 12px;
+
+      .nav-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.8);
+        border: none;
+        cursor: pointer;
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
     }
   }
 
   .thumbnail-list {
     display: flex;
-    gap: 12px;
+    gap: 8px;
+    overflow-x: auto;
 
-    .thumbnail {
-      width: 72px;
-      height: 72px;
-      border-radius: 10px;
-      overflow: hidden;
+    img {
+      width: 80px;
+      height: 60px;
+      object-fit: cover;
+      border-radius: 8px;
       cursor: pointer;
       border: 2px solid transparent;
       transition: border-color 0.3s;
@@ -233,118 +257,140 @@ onMounted(async () => {
       &.active {
         border-color: #a855f7;
       }
-
-      &:hover {
-        border-color: #ec4899;
-      }
-
-      img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-      }
     }
   }
 }
 
 .detail-right {
-  flex: 1;
-
-  .service-name {
-    font-size: 24px;
+  h1 {
+    font-size: 28px;
     font-weight: bold;
     color: #1f2937;
-    margin-bottom: 16px;
+    margin-bottom: 20px;
   }
 
-  .service-price {
-    font-size: 36px;
-    font-weight: bold;
-    color: #ec4899;
-    margin-bottom: 24px;
-    padding-bottom: 24px;
-    border-bottom: 1px solid #f3f4f6;
-  }
-
-  .info-row {
+  .artist-info {
     display: flex;
     align-items: center;
-    margin-bottom: 16px;
-
-    .label {
-      width: 80px;
-      font-size: 14px;
-      color: #6b7280;
-      flex-shrink: 0;
-    }
-
-    .value {
-      font-size: 14px;
-      color: #1f2937;
-    }
-  }
-
-  .artist-section {
-    margin-bottom: 16px;
-
-    .artist-info {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 12px;
-      background: linear-gradient(135deg, rgba(236, 72, 153, 0.06), rgba(168, 85, 247, 0.06));
-      border-radius: 12px;
-    }
+    gap: 12px;
+    margin-bottom: 24px;
 
     .artist-detail {
       display: flex;
       flex-direction: column;
+      gap: 4px;
 
       .artist-name {
         font-size: 16px;
         font-weight: 600;
         color: #1f2937;
       }
+    }
+  }
 
-      .artist-role {
-        font-size: 12px;
-        color: #a855f7;
-        margin-top: 2px;
+  .service-meta {
+    display: flex;
+    gap: 32px;
+    margin-bottom: 24px;
+
+    .meta-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+
+      .label {
+        font-size: 13px;
+        color: #9ca3af;
+      }
+
+      .price {
+        font-size: 28px;
+        font-weight: bold;
+        color: #ec4899;
+      }
+
+      span:not(.label):not(.price) {
+        font-size: 16px;
+        color: #1f2937;
       }
     }
   }
 
-  .form-title {
-    font-size: 18px;
-    font-weight: 600;
-    color: #1f2937;
-    margin-bottom: 16px;
+  .description {
+    margin-bottom: 32px;
+
+    h3 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    p {
+      font-size: 14px;
+      color: #6b7280;
+      line-height: 1.8;
+    }
+  }
+
+  .booking-form {
+    background: #f9fafb;
+    border-radius: 16px;
+    padding: 24px;
+
+    h3 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
   }
 }
 
-.detail-bottom {
-  background: white;
-  border-radius: 20px;
-  padding: 24px 32px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+.slots-loading {
+  color: #9ca3af;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
 
-  :deep(.el-tabs__item.is-active) {
-    color: #a855f7;
-  }
+.no-slots {
+  color: #9ca3af;
+  font-size: 14px;
+}
 
-  :deep(.el-tabs__active-bar) {
-    background: linear-gradient(135deg, #ec4899, #a855f7);
-  }
+.slot-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  width: 100%;
 
-  .description-content {
-    padding: 16px 0;
-    line-height: 1.8;
-    color: #374151;
-    font-size: 15px;
+  .slot-item {
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
 
-    img {
-      max-width: 100%;
-      border-radius: 8px;
+    &:hover {
+      border-color: #c084fc;
+    }
+
+    &.active {
+      border-color: #a855f7;
+      background: linear-gradient(135deg, rgba(168, 85, 247, 0.08), rgba(236, 72, 153, 0.08));
+    }
+
+    .slot-date {
+      font-size: 13px;
+      color: #6b7280;
+      margin-bottom: 4px;
+    }
+
+    .slot-time {
+      font-size: 15px;
+      font-weight: 600;
+      color: #1f2937;
     }
   }
 }

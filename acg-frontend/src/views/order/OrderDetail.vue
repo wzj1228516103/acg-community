@@ -28,7 +28,7 @@
         </template>
         <div v-for="(item, index) in orderItems" :key="index" class="order-item">
           <div class="item-image">
-            <img :src="item.image || 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=anime+figure+collection+otaku&image_size=square'" :alt="item.name" />
+            <img :src="item.image || 'https://picsum.photos/seed/anime/400/400'" :alt="item.name" />
           </div>
           <div class="item-info">
             <span class="item-name">{{ item.name }}</span>
@@ -103,8 +103,18 @@ function getStatusType(status) {
 }
 
 const orderItems = computed(() => {
+  const items = order.value.items
+  if (!items) return []
+  if (Array.isArray(items)) {
+    return items.map(item => ({
+      name: item.productName,
+      image: item.productImage,
+      price: item.price,
+      quantity: item.quantity,
+    }))
+  }
   try {
-    return order.value.items ? JSON.parse(order.value.items) : []
+    return JSON.parse(items)
   } catch {
     return []
   }

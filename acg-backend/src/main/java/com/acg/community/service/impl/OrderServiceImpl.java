@@ -5,13 +5,13 @@ import com.acg.community.dto.CreateOrderDTO;
 import com.acg.community.entity.Order;
 import com.acg.community.entity.OrderItem;
 import com.acg.community.entity.Product;
-import com.acg.community.enums.GoodsStatus;
 import com.acg.community.enums.OrderStatus;
 import com.acg.community.exception.BusinessException;
 import com.acg.community.mapper.OrderItemMapper;
 import com.acg.community.mapper.OrderMapper;
 import com.acg.community.mapper.ProductMapper;
 import com.acg.community.service.OrderService;
+import com.acg.community.util.RedisUtil;
 import com.acg.community.vo.OrderItemVO;
 import com.acg.community.vo.OrderVO;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -29,6 +29,11 @@ import java.util.List;
 @Service
 public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements OrderService {
 
+    private static final long ORDER_LIST_TTL = 120;
+    private static final long ORDER_DETAIL_TTL = 300;
+    private static final String ORDER_LIST_KEY = "acg:order:list:";
+    private static final String ORDER_DETAIL_KEY = "acg:order:detail:";
+
     @Resource
     private OrderMapper orderMapper;
 
@@ -37,6 +42,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
     @Resource
     private ProductMapper productMapper;
+
+    @Resource
+    private RedisUtil redisUtil;
 
     @Override
     @Transactional
@@ -54,7 +62,6 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         order.setReceiverPhone(dto.getReceiverPhone());
         order.setReceiverAddress(dto.getReceiverAddress());
 
-        // Calculate total
         for (CreateOrderDTO.OrderItemDTO itemDTO : itemDTOs) {
             Product product = productMapper.selectById(itemDTO.getProductId());
             if (product == null) {
@@ -70,41 +77,65 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         order.setTotalAmount(totalAmount);
         orderMapper.insert(order);
 
-        // Insert order items
         for (CreateOrderDTO.OrderItemDTO itemDTO : itemDTOs) {
             Product product = productMapper.selectById(itemDTO.getProductId());
             OrderItem item = new OrderItem();
             item.setOrderId(order.getId());
             item.setProductId(itemDTO.getProductId());
             item.setProductName(product.getName());
-            item.setProductImage(product.getImages());
+
+            String images = product.getImages();
+            if (images != null && images.length() > 500) {
+                images = images.substring(0, 500);
+            }
+            item.setProductImage(images);
+
             item.setQuantity(itemDTO.getQuantity());
             item.setPrice(product.getPrice());
             item.setSubtotal(product.getPrice().multiply(BigDecimal.valueOf(itemDTO.getQuantity())));
             orderItemMapper.insert(item);
 
-            // Decrease stock
             product.setStock(product.getStock() - itemDTO.getQuantity());
             productMapper.updateById(product);
         }
 
+        redisUtil.deleteByPrefix(ORDER_LIST_KEY + userId);
         log.info("订单创建成功, orderId={}, userId={}, totalAmount={}", order.getId(), userId, totalAmount);
         return order.getId();
     }
 
     @Override
     public Page<OrderVO> getUserOrders(Long userId, int page, int size) {
+        String cacheKey = ORDER_LIST_KEY + userId + ":" + page + ":" + size;
+
+        Page<OrderVO> cached = redisUtil.get(cacheKey);
+        if (cached != null) {
+            return cached;
+        }
+
         LambdaQueryWrapper<Order> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Order::getUserId, userId).orderByDesc(Order::getCreatedAt);
         Page<Order> orderPage = orderMapper.selectPage(new Page<>(page, size), wrapper);
 
         Page<OrderVO> voPage = new Page<>(orderPage.getCurrent(), orderPage.getSize(), orderPage.getTotal());
         voPage.setRecords(orderPage.getRecords().stream().map(this::toOrderVO).toList());
+
+        redisUtil.set(cacheKey, voPage, ORDER_LIST_TTL);
         return voPage;
     }
 
     @Override
     public OrderVO getOrderDetail(Long orderId, Long userId) {
+        String cacheKey = ORDER_DETAIL_KEY + orderId;
+
+        OrderVO cached = redisUtil.get(cacheKey);
+        if (cached != null) {
+            if (!cached.getUserId().equals(userId)) {
+                throw new BusinessException("无权查看该订单");
+            }
+            return cached;
+        }
+
         Order order = getById(orderId);
         if (order == null) {
             throw new BusinessException("订单不存在");
@@ -112,7 +143,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         if (!order.getUserId().equals(userId)) {
             throw new BusinessException("无权查看该订单");
         }
-        return toOrderVO(order);
+        OrderVO vo = toOrderVO(order);
+        redisUtil.set(cacheKey, vo, ORDER_DETAIL_TTL);
+        return vo;
     }
 
     @Override
@@ -122,6 +155,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             throw new BusinessException("订单不存在");
         }
         lambdaUpdate().eq(Order::getId, orderId).set(Order::getStatus, status).update();
+        redisUtil.delete(ORDER_DETAIL_KEY + orderId);
+        redisUtil.deleteByPrefix(ORDER_LIST_KEY + order.getUserId());
         log.info("订单状态更新, orderId={}, status={}", orderId, status);
     }
 

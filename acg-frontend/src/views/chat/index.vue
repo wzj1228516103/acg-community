@@ -72,6 +72,7 @@
 <script setup>
 import { ref, onMounted, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
+import { ChatDotSquare } from '@element-plus/icons-vue'
 import { getRoomsApi, getMessagesApi, sendMessageApi } from '@/api/chat'
 import { useUserStore } from '@/stores/user'
 

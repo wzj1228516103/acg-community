@@ -9,7 +9,7 @@
         </template>
         <div v-for="item in selectedItems" :key="item.productId" class="checkout-item">
           <div class="item-image">
-            <img :src="item.image || 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=anime+figure+collection+otaku&image_size=square'" :alt="item.name" />
+            <img :src="item.image || 'https://picsum.photos/seed/anime/400/400'" :alt="item.name" />
           </div>
           <div class="item-info">
             <span class="item-name">{{ item.name }}</span>

@@ -21,6 +21,21 @@ const routes = [
       { path: 'profile-settings', name: 'ProfileSettings', component: () => import('@/views/user/Settings.vue'), meta: { title: '个人设置', requireAuth: true } },
     ],
   },
+  {
+    path: '/admin',
+    component: () => import('@/views/admin/AdminLayout.vue'),
+    meta: { requireAuth: true, requireAdmin: true },
+    redirect: '/admin/dashboard',
+    children: [
+      { path: 'dashboard', name: 'AdminDashboard', component: () => import('@/views/admin/Dashboard.vue'), meta: { title: '仪表盘' } },
+      { path: 'users', name: 'AdminUsers', component: () => import('@/views/admin/UserList.vue'), meta: { title: '用户管理' } },
+      { path: 'products', name: 'AdminProducts', component: () => import('@/views/admin/ProductList.vue'), meta: { title: '商品管理' } },
+      { path: 'categories', name: 'AdminCategories', component: () => import('@/views/admin/CategoryList.vue'), meta: { title: '分类管理' } },
+      { path: 'orders', name: 'AdminOrders', component: () => import('@/views/admin/OrderList.vue'), meta: { title: '订单管理' } },
+      { path: 'makeup-services', name: 'AdminMakeupServices', component: () => import('@/views/admin/MakeupServiceList.vue'), meta: { title: '化妆服务' } },
+      { path: 'applications', name: 'AdminApplications', component: () => import('@/views/admin/ApplicationList.vue'), meta: { title: '审核管理' } },
+    ],
+  },
   { path: '/login', name: 'Login', component: () => import('@/views/user/Login.vue'), meta: { title: '登录' } },
   { path: '/register', name: 'Register', component: () => import('@/views/user/Register.vue'), meta: { title: '注册' } },
   { path: '/:pathMatch(.*)*', redirect: '/' },
@@ -34,11 +49,25 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   document.title = `${to.meta.title || '漫化'} — 漫化二次元社区`
-  if (to.meta.requireAuth && !localStorage.getItem('token')) {
-    next({ path: '/login', query: { redirect: to.fullPath } })
-  } else {
-    next()
+  if (!localStorage.getItem('token')) {
+    if (to.meta.requireAuth || to.matched.some(r => r.meta.requireAuth)) {
+      next({ path: '/login', query: { redirect: to.fullPath } })
+      return
+    }
   }
+  if (to.matched.some(r => r.meta.requireAdmin)) {
+    try {
+      const user = JSON.parse(localStorage.getItem('user'))
+      if (!user || user.role < 3) {
+        next({ path: '/' })
+        return
+      }
+    } catch {
+      next({ path: '/' })
+      return
+    }
+  }
+  next()
 })
 
 export default router

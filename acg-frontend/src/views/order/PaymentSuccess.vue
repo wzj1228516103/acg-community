@@ -20,6 +20,7 @@
 
 <script setup>
 import { useRouter } from 'vue-router'
+import { CircleCheck } from '@element-plus/icons-vue'
 
 const router = useRouter()
 </script>

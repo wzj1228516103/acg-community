@@ -89,6 +89,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { Search } from '@element-plus/icons-vue'
 import { getProductsApi, getCategoriesApi } from '@/api/product'
 
 const router = useRouter()
@@ -105,9 +106,9 @@ const total = ref(0)
 function getProductImage(product) {
   try {
     const images = product.images ? JSON.parse(product.images) : []
-    return images[0] || 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=anime+figure+collection+otaku&image_size=square'
+    return images[0] || 'https://picsum.photos/seed/anime/400/400'
   } catch {
-    return 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=anime+figure+collection+otaku&image_size=square'
+    return 'https://picsum.photos/seed/anime/400/400'
   }
 }
 

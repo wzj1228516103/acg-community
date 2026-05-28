@@ -126,13 +126,31 @@ CREATE TABLE `t_makeup_service` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='化妆服务表';
 
 -- ============================================================
--- 7. 化妆预约表
+-- 7. 化妆师可用时间段表
+-- ============================================================
+CREATE TABLE `t_artist_available_slot` (
+    `id`         BIGINT   NOT NULL AUTO_INCREMENT,
+    `artist_id`  BIGINT   NOT NULL,
+    `service_id` BIGINT   NOT NULL,
+    `start_time` DATETIME NOT NULL,
+    `end_time`   DATETIME NOT NULL,
+    `booked`     TINYINT  DEFAULT 0,
+    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `deleted`    TINYINT  DEFAULT 0,
+    PRIMARY KEY (`id`),
+    KEY `idx_service_id` (`service_id`),
+    KEY `idx_booked` (`booked`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='化妆师可用时间段表';
+
+-- ============================================================
+-- 8. 化妆预约表
 -- ============================================================
 CREATE TABLE `t_makeup_booking` (
     `id`           BIGINT   NOT NULL AUTO_INCREMENT,
     `user_id`      BIGINT   NOT NULL,
     `service_id`   BIGINT   NOT NULL,
-    `booking_date` DATE     NOT NULL,
+    `slot_id`      BIGINT   DEFAULT NULL,
     `status`       TINYINT  DEFAULT 0 COMMENT '0=pending,1=confirmed,2=completed,3=cancelled',
     `notes`        TEXT     DEFAULT NULL,
     `contact_name` VARCHAR(50)  DEFAULT NULL,
@@ -143,7 +161,9 @@ CREATE TABLE `t_makeup_booking` (
     PRIMARY KEY (`id`),
     KEY `idx_user_id`    (`user_id`),
     KEY `idx_service_id` (`service_id`),
-    CONSTRAINT `fk_booking_service` FOREIGN KEY (`service_id`) REFERENCES `t_makeup_service` (`id`)
+    KEY `idx_slot_id`    (`slot_id`),
+    CONSTRAINT `fk_booking_service` FOREIGN KEY (`service_id`) REFERENCES `t_makeup_service` (`id`),
+    CONSTRAINT `fk_booking_slot`    FOREIGN KEY (`slot_id`)    REFERENCES `t_artist_available_slot` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='化妆预约表';
 
 -- ============================================================

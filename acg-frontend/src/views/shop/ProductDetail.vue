@@ -73,6 +73,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { ShoppingCart } from '@element-plus/icons-vue'
 import { getProductDetailApi } from '@/api/product'
 import { useCartStore } from '@/stores/cart'
 
@@ -94,7 +95,7 @@ const imageList = computed(() => {
 })
 
 const currentImage = computed(() => {
-  return imageList.value[currentImageIndex.value] || 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=anime+figure+collection+otaku&image_size=square'
+  return imageList.value[currentImageIndex.value] || 'https://picsum.photos/seed/anime/400/400'
 })
 
 function handleAddToCart() {

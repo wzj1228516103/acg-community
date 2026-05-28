@@ -67,9 +67,9 @@ const services = ref([])
 function getServiceImage(service) {
   try {
     const images = service.images ? JSON.parse(service.images) : []
-    return images[0] || 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=anime+cosplay+makeup+service+professional&image_size=landscape_4_3'
+    return images[0] || 'https://picsum.photos/seed/cosplay/640/400'
   } catch {
-    return 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=anime+cosplay+makeup+service+professional&image_size=landscape_4_3'
+    return 'https://picsum.photos/seed/cosplay/640/400'
   }
 }
 

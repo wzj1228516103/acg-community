@@ -6,8 +6,6 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import java.time.LocalDate;
-
 @Data
 @EqualsAndHashCode(callSuper = true)
 @TableName("t_makeup_booking")
@@ -17,7 +15,7 @@ public class MakeupBooking extends BaseEntity {
 
     private Long serviceId;
 
-    private LocalDate bookingDate;
+    private Long slotId;
 
     private BookingStatus status;
 

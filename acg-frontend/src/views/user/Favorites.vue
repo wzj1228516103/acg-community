@@ -57,6 +57,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { StarFilled } from '@element-plus/icons-vue'
 import { getFavoritesApi, toggleFavoriteApi } from '@/api/favorite'
 
 const router = useRouter()
@@ -68,9 +69,9 @@ const activeTab = ref('product')
 function getItemImage(item) {
   try {
     const images = item.images ? JSON.parse(item.images) : []
-    return images[0] || 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=anime+figure+collection+otaku&image_size=square'
+    return images[0] || 'https://picsum.photos/seed/anime/400/400'
   } catch {
-    return 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=anime+figure+collection+otaku&image_size=square'
+    return 'https://picsum.photos/seed/anime/400/400'
   }
 }
 

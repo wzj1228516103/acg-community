@@ -18,7 +18,7 @@
             <el-checkbox :model-value="item.selected" @change="cartStore.toggleSelect(item.productId)" />
             <div class="item-info">
               <div class="item-image" @click="router.push('/product/' + item.productId)">
-                <img :src="item.image || 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=anime+figure+collection+otaku&image_size=square'" :alt="item.name" />
+                <img :src="item.image || 'https://picsum.photos/seed/anime/400/400'" :alt="item.name" />
               </div>
               <span class="item-name">{{ item.name }}</span>
             </div>
@@ -81,6 +81,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { Delete, ShoppingCart } from '@element-plus/icons-vue'
 import { useCartStore } from '@/stores/cart'
 
 const router = useRouter()

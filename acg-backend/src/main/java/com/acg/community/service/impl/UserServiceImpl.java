@@ -11,6 +11,7 @@ import com.acg.community.enums.Role;
 import com.acg.community.exception.BusinessException;
 import com.acg.community.mapper.UserMapper;
 import com.acg.community.service.UserService;
+import com.acg.community.util.RedisUtil;
 import com.acg.community.vo.UserVO;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.annotation.Resource;
@@ -21,8 +22,14 @@ import org.springframework.stereotype.Service;
 @Service
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
 
+    private static final long USER_CACHE_TTL = 3600;
+    private static final String USER_CACHE_KEY = "acg:user:info:";
+
     @Resource
     private UserMapper userMapper;
+
+    @Resource
+    private RedisUtil redisUtil;
 
     @Override
     public UserVO login(LoginDTO dto) {
@@ -36,7 +43,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (!md5Password.equals(user.getPassword())) {
             throw new BusinessException("用户名或密码错误");
         }
-        return toUserVO(user);
+        UserVO vo = toUserVO(user);
+        redisUtil.set(USER_CACHE_KEY + vo.getId(), vo, USER_CACHE_TTL);
+        return vo;
     }
 
     @Override
@@ -61,11 +70,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     public UserVO getUserInfo(Long userId) {
+        String cacheKey = USER_CACHE_KEY + userId;
+        UserVO cached = redisUtil.get(cacheKey);
+        if (cached != null) {
+            return cached;
+        }
         User user = getById(userId);
         if (user == null) {
             throw new BusinessException("用户不存在");
         }
-        return toUserVO(user);
+        UserVO vo = toUserVO(user);
+        redisUtil.set(cacheKey, vo, USER_CACHE_TTL);
+        return vo;
     }
 
     @Override
@@ -80,6 +96,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 .set(dto.getPhone() != null, User::getPhone, dto.getPhone())
                 .set(dto.getAvatarUrl() != null, User::getAvatarUrl, dto.getAvatarUrl())
                 .update();
+        redisUtil.delete(USER_CACHE_KEY + userId);
     }
 
     private UserVO toUserVO(User user) {

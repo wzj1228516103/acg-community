@@ -105,7 +105,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, markRaw } from 'vue'
+import { ShoppingBag, Scissor, MagicStick, ChatDotSquare, ChatLineRound } from '@element-plus/icons-vue'
 import { getMakeupServicesApi } from '@/api/makeup'
 import { getProductsApi } from '@/api/product'
 
@@ -114,28 +115,31 @@ const makeupServices = ref([])
 const products = ref([])
 
 const platformServices = [
-  { icon: 'ShoppingBag', title: '二次元周边商城', desc: '精选正版周边商品，品质保证' },
-  { icon: 'Scissors', title: '专业化妆师服务', desc: '认证化妆师一对一服务' },
-  { icon: 'MagicStick', title: 'Cosplay服装定制', desc: '个性化定制服务' },
-  { icon: 'ChatDotSquare', title: '社区交流互动', desc: '与同好分享交流' },
-  { icon: 'Message', title: '即时聊天功能', desc: '与化妆师、商家实时沟通' },
+  { icon: markRaw(ShoppingBag), title: '二次元周边商城', desc: '精选正版周边商品，品质保证' },
+  { icon: markRaw(Scissor), title: '专业化妆师服务', desc: '认证化妆师一对一服务' },
+  { icon: markRaw(MagicStick), title: 'Cosplay服装定制', desc: '个性化定制服务' },
+  { icon: markRaw(ChatDotSquare), title: '社区交流互动', desc: '与同好分享交流' },
+  { icon: markRaw(ChatLineRound), title: '即时聊天功能', desc: '与化妆师、商家实时沟通' },
 ]
+
+const PLACEHOLDER_SERVICE = 'https://picsum.photos/seed/makeup/640/400'
+const PLACEHOLDER_PRODUCT = 'https://picsum.photos/seed/anime/400/400'
 
 function getServiceImage(service) {
   try {
     const images = service.images ? JSON.parse(service.images) : []
-    return images[0] || 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=anime+cosplay+makeup+service+professional&image_size=landscape_4_3'
+    return images[0] || PLACEHOLDER_SERVICE
   } catch {
-    return 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=anime+cosplay+makeup+service+professional&image_size=landscape_4_3'
+    return PLACEHOLDER_SERVICE
   }
 }
 
 function getProductImage(product) {
   try {
     const images = product.images ? JSON.parse(product.images) : []
-    return images[0] || 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=anime+figure+collection+otaku&image_size=square'
+    return images[0] || PLACEHOLDER_PRODUCT
   } catch {
-    return 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=anime+figure+collection+otaku&image_size=square'
+    return PLACEHOLDER_PRODUCT
   }
 }
 

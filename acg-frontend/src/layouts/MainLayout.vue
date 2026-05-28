@@ -110,6 +110,7 @@
 
 <script setup>
 import { useRouter } from 'vue-router'
+import { Promotion, ShoppingCart, ChatDotSquare, ArrowDown } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
 import { useCartStore } from '@/stores/cart'
 
