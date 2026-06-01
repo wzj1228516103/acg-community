@@ -19,6 +19,8 @@ const routes = [
       { path: 'favorites', name: 'Favorites', component: () => import('@/views/user/Favorites.vue'), meta: { title: '我的收藏', requireAuth: true } },
       { path: 'profile', name: 'Profile', component: () => import('@/views/user/Profile.vue'), meta: { title: '个人中心', requireAuth: true } },
       { path: 'profile-settings', name: 'ProfileSettings', component: () => import('@/views/user/Settings.vue'), meta: { title: '个人设置', requireAuth: true } },
+      { path: 'publish-product', name: 'PublishProduct', component: () => import('@/views/merchant/PublishProduct.vue'), meta: { title: '发布商品', requireAuth: true } },
+      { path: 'publish-service', name: 'PublishService', component: () => import('@/views/artist/PublishService.vue'), meta: { title: '发布服务', requireAuth: true } },
     ],
   },
   {

@@ -13,7 +13,7 @@
       </template>
 
       <el-table :data="tableData" v-loading="loading" stripe @row-click="viewDetail">
-        <el-table-column prop="orderNo" label="订单号" min-width="180" />
+        <el-table-column prop="id" label="订单号" min-width="200" />
         <el-table-column label="用户" min-width="120">
           <template #default="{ row }">{{ row.username || row.nickname || '-' }}</template>
         </el-table-column>
@@ -63,7 +63,7 @@
     <el-dialog v-model="detailVisible" title="订单详情" width="600px">
       <template v-if="currentOrder">
         <el-descriptions :column="2" border>
-          <el-descriptions-item label="订单号" :span="2">{{ currentOrder.orderNo }}</el-descriptions-item>
+          <el-descriptions-item label="订单号" :span="2">{{ currentOrder.id }}</el-descriptions-item>
           <el-descriptions-item label="用户">{{ currentOrder.username || currentOrder.nickname || '-' }}</el-descriptions-item>
           <el-descriptions-item label="状态">
             <el-tag :type="statusTagType(currentOrder.status)" size="small">{{ statusText(currentOrder.status) }}</el-tag>

@@ -1,1 +1,39 @@
-node_modules
+# Java / Maven
+acg-backend/target/
+*.class
+*.jar
+*.war
+*.ear
+
+# IDE
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+.settings/
+.project
+.classpath
+.factorypath
+*.swp
+*.swo
+*~
+
+# Node
+node_modules/
+acg-frontend/node_modules/
+acg-frontend/dist/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+logs/
+
+# Env
+.env
+.env.local
+.env.*.local

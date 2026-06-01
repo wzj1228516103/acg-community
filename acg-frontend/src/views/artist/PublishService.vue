@@ -1,0 +1,183 @@
+<template>
+  <div class="publish-page">
+    <div class="publish-container">
+      <el-card shadow="never" class="publish-card">
+        <template #header>
+          <div class="card-header">
+            <el-button link @click="router.back()">
+              <el-icon><ArrowLeft /></el-icon> 返回
+            </el-button>
+            <span class="title">发布化妆服务</span>
+          </div>
+        </template>
+
+        <el-form :model="form" :rules="rules" ref="formRef" label-width="100px" label-position="top">
+          <el-form-item label="服务名称" prop="name">
+            <el-input v-model="form.name" placeholder="如：Cosplay全套特效妆" maxlength="200" show-word-limit />
+          </el-form-item>
+
+          <el-row :gutter="20">
+            <el-col :span="12">
+              <el-form-item label="服务价格 (元)" prop="price">
+                <el-input-number v-model="form.price" :min="0.01" :precision="2" :step="10" style="width: 100%" />
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item label="服务时长 (分钟)" prop="duration">
+                <el-input-number v-model="form.duration" :min="15" :step="15" style="width: 100%" />
+              </el-form-item>
+            </el-col>
+          </el-row>
+
+          <el-form-item label="服务描述" prop="description">
+            <el-input v-model="form.description" type="textarea" :rows="5" placeholder="详细描述您的化妆服务内容、风格、适合场景等" maxlength="2000" show-word-limit />
+          </el-form-item>
+
+          <el-form-item label="服务图片">
+            <div class="image-urls">
+              <div v-for="(url, index) in form.imageUrls" :key="index" class="image-url-row">
+                <el-input v-model="form.imageUrls[index]" placeholder="输入图片URL地址" clearable>
+                  <template #prepend>{{ index + 1 }}</template>
+                </el-input>
+                <el-button type="danger" :icon="Delete" circle size="small" @click="removeImageUrl(index)" v-if="form.imageUrls.length > 1" />
+              </div>
+              <el-button type="primary" link @click="addImageUrl" class="add-url-btn">
+                <el-icon><Plus /></el-icon> 添加图片URL
+              </el-button>
+              <div class="image-tip">建议上传您的作品图片，第一张将作为封面图</div>
+            </div>
+          </el-form-item>
+
+          <el-form-item>
+            <el-button type="primary" size="large" :loading="submitting" @click="handleSubmit" class="submit-btn">
+              发布服务
+            </el-button>
+          </el-form-item>
+        </el-form>
+      </el-card>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, reactive } from 'vue'
+import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
+import { ArrowLeft, Delete, Plus } from '@element-plus/icons-vue'
+import { createMakeupServiceApi } from '@/api/makeup'
+
+const router = useRouter()
+const formRef = ref(null)
+const submitting = ref(false)
+
+const form = reactive({
+  name: '',
+  price: 0,
+  duration: 60,
+  description: '',
+  imageUrls: [''],
+})
+
+const rules = {
+  name: [{ required: true, message: '请输入服务名称', trigger: 'blur' }],
+  price: [{ required: true, message: '请输入价格', trigger: 'blur' }],
+  duration: [{ required: true, message: '请输入服务时长', trigger: 'blur' }],
+  description: [{ required: true, message: '请输入服务描述', trigger: 'blur' }],
+}
+
+function addImageUrl() {
+  form.imageUrls.push('')
+}
+
+function removeImageUrl(index) {
+  form.imageUrls.splice(index, 1)
+}
+
+async function handleSubmit() {
+  const valid = await formRef.value?.validate().catch(() => false)
+  if (!valid) return
+
+  const images = form.imageUrls.filter(u => u.trim() !== '')
+
+  submitting.value = true
+  try {
+    await createMakeupServiceApi({
+      name: form.name,
+      price: form.price,
+      duration: form.duration,
+      description: form.description,
+      images: JSON.stringify(images),
+    })
+    ElMessage.success('发布成功，等待管理员审核')
+    router.push('/profile')
+  } catch {
+    // handled
+  } finally {
+    submitting.value = false
+  }
+}
+</script>
+
+<style lang="scss" scoped>
+.publish-page {
+  padding: 32px 24px 64px;
+  min-height: calc(100vh - 64px);
+  background: #f8fafc;
+}
+
+.publish-container {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.publish-card {
+  border-radius: 16px;
+  border: none;
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+
+    .title {
+      font-size: 20px;
+      font-weight: 600;
+      color: #1a1a1a;
+    }
+  }
+}
+
+.image-urls {
+  width: 100%;
+
+  .image-url-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+    align-items: center;
+  }
+
+  .add-url-btn {
+    margin-top: 4px;
+    margin-bottom: 8px;
+  }
+
+  .image-tip {
+    font-size: 12px;
+    color: #909399;
+  }
+}
+
+.submit-btn {
+  width: 200px;
+  height: 44px;
+  font-size: 16px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #ec4899, #a855f7);
+  border: none;
+
+  &:hover {
+    opacity: 0.9;
+  }
+}
+</style>

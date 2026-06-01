@@ -57,7 +57,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, markRaw } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import {
   Promotion, DataLine, User, ShoppingBag, Menu, List,
@@ -70,13 +70,13 @@ const route = useRoute()
 const userStore = useUserStore()
 
 const menuItems = [
-  { label: '仪表盘', icon: 'DataLine', path: '/admin/dashboard' },
-  { label: '用户管理', icon: 'User', path: '/admin/users' },
-  { label: '商品管理', icon: 'ShoppingBag', path: '/admin/products' },
-  { label: '分类管理', icon: 'Menu', path: '/admin/categories' },
-  { label: '订单管理', icon: 'List', path: '/admin/orders' },
-  { label: '化妆服务', icon: 'MagicStick', path: '/admin/makeup-services' },
-  { label: '审核管理', icon: 'Document', path: '/admin/applications' },
+  { label: '仪表盘', icon: markRaw(DataLine), path: '/admin/dashboard' },
+  { label: '用户管理', icon: markRaw(User), path: '/admin/users' },
+  { label: '商品管理', icon: markRaw(ShoppingBag), path: '/admin/products' },
+  { label: '分类管理', icon: markRaw(Menu), path: '/admin/categories' },
+  { label: '订单管理', icon: markRaw(List), path: '/admin/orders' },
+  { label: '化妆服务', icon: markRaw(MagicStick), path: '/admin/makeup-services' },
+  { label: '审核管理', icon: markRaw(Document), path: '/admin/applications' },
 ]
 
 const activeMenu = computed(() => route.path)

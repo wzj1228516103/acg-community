@@ -9,3 +9,5 @@ export const createMakeupBookingApi = (data) => request.post('/makeup/booking/cr
 export const getAvailableSlotsApi = (serviceId) => request.get('/makeup/slot/available', { params: { serviceId } })
 
 export const createArtistSlotsApi = (data) => request.post('/makeup/slot/create', data)
+
+export const createMakeupServiceApi = (data) => request.post('/makeup/service/create', data)

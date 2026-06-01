@@ -5,3 +5,5 @@ export const getProductsApi = (params) => request.get('/product/list', { params 
 export const getProductDetailApi = (id) => request.get(`/product/${id}`)
 
 export const getCategoriesApi = () => request.get('/category/list')
+
+export const createProductApi = (data) => request.post('/product/create', data)

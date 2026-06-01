@@ -4,6 +4,7 @@ import cn.dev33.satoken.stp.StpUtil;
 import com.acg.community.common.PageResult;
 import com.acg.community.common.Result;
 import com.acg.community.entity.*;
+import com.acg.community.enums.ApplyStatus;
 import com.acg.community.enums.GoodsStatus;
 import com.acg.community.enums.OrderStatus;
 import com.acg.community.enums.Role;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,17 +33,23 @@ public class AdminController {
     private final CategoryService categoryService;
     private final OrderService orderService;
     private final MakeupServiceService makeupServiceService;
+    private final MakeupArtistApplicationService makeupArtistApplicationService;
+    private final MerchantApplicationService merchantApplicationService;
 
     public AdminController(UserService userService,
                            ProductService productService,
                            CategoryService categoryService,
                            OrderService orderService,
-                           MakeupServiceService makeupServiceService) {
+                           MakeupServiceService makeupServiceService,
+                           MakeupArtistApplicationService makeupArtistApplicationService,
+                           MerchantApplicationService merchantApplicationService) {
         this.userService = userService;
         this.productService = productService;
         this.categoryService = categoryService;
         this.orderService = orderService;
         this.makeupServiceService = makeupServiceService;
+        this.makeupArtistApplicationService = makeupArtistApplicationService;
+        this.merchantApplicationService = merchantApplicationService;
     }
 
     private void checkAdmin() {
@@ -83,6 +91,36 @@ public class AdminController {
         pendingWrapper.eq(MakeupService::getStatus, GoodsStatus.INACTIVE);
         long pendingApplications = makeupServiceService.count(pendingWrapper);
 
+        List<String> dates = new ArrayList<>();
+        List<Long> dailyUsers = new ArrayList<>();
+        List<Long> dailyOrders = new ArrayList<>();
+        List<BigDecimal> dailyAmounts = new ArrayList<>();
+        for (int i = 6; i >= 0; i--) {
+            LocalDate day = LocalDate.now().minusDays(i);
+            dates.add(day.getMonthValue() + "/" + day.getDayOfMonth());
+            LocalDateTime dayStart = day.atStartOfDay();
+            LocalDateTime dayEnd = day.plusDays(1).atStartOfDay();
+
+            LambdaQueryWrapper<User> uw = new LambdaQueryWrapper<>();
+            uw.ge(User::getCreatedAt, dayStart).lt(User::getCreatedAt, dayEnd);
+            dailyUsers.add(userService.count(uw));
+
+            LambdaQueryWrapper<Order> ow = new LambdaQueryWrapper<>();
+            ow.ge(Order::getCreatedAt, dayStart).lt(Order::getCreatedAt, dayEnd);
+            dailyOrders.add(orderService.count(ow));
+
+            List<Order> dayOrders = orderService.list(ow);
+            BigDecimal dayAmount = dayOrders.stream()
+                    .filter(o -> o.getStatus() != OrderStatus.CANCELLED)
+                    .map(Order::getTotalAmount)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            dailyAmounts.add(dayAmount);
+        }
+
+        long paidCount = orders.stream().filter(o -> o.getStatus() == OrderStatus.PAID).count();
+        long shippedCount = orders.stream().filter(o -> o.getStatus() == OrderStatus.SHIPPED).count();
+        long completedCount = orders.stream().filter(o -> o.getStatus() == OrderStatus.COMPLETED).count();
+
         Map<String, Object> data = new HashMap<>();
         data.put("userCount", userCount);
         data.put("todayUserCount", todayUserCount);
@@ -92,6 +130,16 @@ public class AdminController {
         data.put("productCount", productCount);
         data.put("makeupServiceCount", makeupServiceCount);
         data.put("pendingApplications", pendingApplications);
+        data.put("chartDates", dates);
+        data.put("chartDailyUsers", dailyUsers);
+        data.put("chartDailyOrders", dailyOrders);
+        data.put("chartDailyAmounts", dailyAmounts);
+        data.put("orderStatusData", List.of(
+                Map.of("name", "待付款", "value", orders.stream().filter(o -> o.getStatus() == OrderStatus.PENDING).count()),
+                Map.of("name", "已支付", "value", paidCount),
+                Map.of("name", "已发货", "value", shippedCount),
+                Map.of("name", "已完成", "value", completedCount)
+        ));
 
         return Result.success(data);
     }
@@ -147,7 +195,7 @@ public class AdminController {
     }
 
     @GetMapping("/products")
-    public Result<PageResult<Product>> listProducts(
+    public Result<Map<String, Object>> listProducts(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size) {
         checkAdmin();
@@ -155,9 +203,45 @@ public class AdminController {
         LambdaQueryWrapper<Product> wrapper = new LambdaQueryWrapper<>();
         wrapper.orderByDesc(Product::getCreatedAt);
         Page<Product> result = productService.page(new Page<>(page, size), wrapper);
-        PageResult<Product> pageResult = new PageResult<>(
-                result.getRecords(), result.getTotal(), result.getCurrent(), result.getSize());
-        return Result.success(pageResult);
+
+        List<Long> categoryIds = result.getRecords().stream().map(Product::getCategoryId).filter(java.util.Objects::nonNull).distinct().collect(java.util.stream.Collectors.toList());
+        Map<Long, String> categoryMap = new HashMap<>();
+        if (!categoryIds.isEmpty()) {
+            List<Category> categories = categoryService.listByIds(categoryIds);
+            categories.forEach(c -> categoryMap.put(c.getId(), c.getName()));
+        }
+
+        List<Long> merchantIds = result.getRecords().stream().map(Product::getMerchantId).filter(java.util.Objects::nonNull).distinct().collect(java.util.stream.Collectors.toList());
+        Map<Long, String> merchantMap = new HashMap<>();
+        if (!merchantIds.isEmpty()) {
+            List<User> merchants = userService.listByIds(merchantIds);
+            merchants.forEach(u -> merchantMap.put(u.getId(), u.getNickname() != null ? u.getNickname() : u.getUsername()));
+        }
+
+        List<Map<String, Object>> records = result.getRecords().stream().map(product -> {
+            Map<String, Object> item = new HashMap<>();
+            item.put("id", String.valueOf(product.getId()));
+            item.put("name", product.getName());
+            item.put("description", product.getDescription());
+            item.put("price", product.getPrice());
+            item.put("stock", product.getStock());
+            item.put("images", product.getImages());
+            item.put("categoryId", String.valueOf(product.getCategoryId()));
+            item.put("categoryName", categoryMap.getOrDefault(product.getCategoryId(), "-"));
+            item.put("merchantId", product.getMerchantId() != null ? String.valueOf(product.getMerchantId()) : null);
+            item.put("merchantName", product.getMerchantId() != null ? merchantMap.getOrDefault(product.getMerchantId(), "-") : "-");
+            item.put("status", product.getStatus().getCode());
+            item.put("createdAt", product.getCreatedAt());
+            item.put("updatedAt", product.getUpdatedAt());
+            return item;
+        }).collect(java.util.stream.Collectors.toList());
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("records", records);
+        data.put("total", result.getTotal());
+        data.put("current", result.getCurrent());
+        data.put("size", result.getSize());
+        return Result.success(data);
     }
 
     @PostMapping("/products")
@@ -225,29 +309,67 @@ public class AdminController {
     }
 
     @GetMapping("/orders")
-    public Result<PageResult<Order>> listOrders(
+    public Result<Map<String, Object>> listOrders(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) Integer status) {
+            @RequestParam(required = false) String status) {
         checkAdmin();
 
         LambdaQueryWrapper<Order> wrapper = new LambdaQueryWrapper<>();
-        if (status != null) {
-            wrapper.eq(Order::getStatus, OrderStatus.values()[status]);
+        if (status != null && !status.isEmpty()) {
+            try {
+                wrapper.eq(Order::getStatus, OrderStatus.valueOf(status));
+            } catch (IllegalArgumentException ignored) {
+            }
         }
         wrapper.orderByDesc(Order::getCreatedAt);
         Page<Order> result = orderService.page(new Page<>(page, size), wrapper);
-        PageResult<Order> pageResult = new PageResult<>(
-                result.getRecords(), result.getTotal(), result.getCurrent(), result.getSize());
-        return Result.success(pageResult);
+
+        List<Long> userIds = result.getRecords().stream().map(Order::getUserId).distinct().collect(java.util.stream.Collectors.toList());
+        Map<Long, User> userMap = new HashMap<>();
+        if (!userIds.isEmpty()) {
+            List<User> users = userService.listByIds(userIds);
+            users.forEach(u -> userMap.put(u.getId(), u));
+        }
+
+        List<Map<String, Object>> records = result.getRecords().stream().map(order -> {
+            Map<String, Object> item = new HashMap<>();
+            item.put("id", String.valueOf(order.getId()));
+            item.put("userId", String.valueOf(order.getUserId()));
+            item.put("totalAmount", order.getTotalAmount());
+            item.put("status", order.getStatus().name());
+            item.put("receiverName", order.getReceiverName());
+            item.put("receiverPhone", order.getReceiverPhone());
+            item.put("receiverAddress", order.getReceiverAddress());
+            item.put("createdAt", order.getCreatedAt());
+            item.put("updatedAt", order.getUpdatedAt());
+            User user = userMap.get(order.getUserId());
+            if (user != null) {
+                item.put("username", user.getUsername());
+                item.put("nickname", user.getNickname());
+            }
+            return item;
+        }).collect(java.util.stream.Collectors.toList());
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("records", records);
+        data.put("total", result.getTotal());
+        data.put("current", result.getCurrent());
+        data.put("size", result.getSize());
+        return Result.success(data);
     }
 
     @PutMapping("/orders/{id}/status")
-    public Result<Void> updateOrderStatus(@PathVariable Long id, @RequestParam int statusCode) {
+    public Result<Void> updateOrderStatus(@PathVariable Long id, @RequestParam String status) {
         checkAdmin();
 
-        OrderStatus status = OrderStatus.values()[statusCode];
-        orderService.updateOrderStatus(id, status);
+        OrderStatus orderStatus;
+        try {
+            orderStatus = OrderStatus.valueOf(status);
+        } catch (IllegalArgumentException e) {
+            throw new BusinessException("无效的订单状态");
+        }
+        orderService.updateOrderStatus(id, orderStatus);
         return Result.success("订单状态更新成功", null);
     }
 
@@ -276,5 +398,57 @@ public class AdminController {
         service.setStatus(service.getStatus() == GoodsStatus.ACTIVE ? GoodsStatus.INACTIVE : GoodsStatus.ACTIVE);
         makeupServiceService.updateById(service);
         return Result.success("操作成功", null);
+    }
+
+    @GetMapping("/applications/artist")
+    public Result<PageResult<MakeupArtistApplication>> listArtistApplications(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        checkAdmin();
+
+        Page<MakeupArtistApplication> result = makeupArtistApplicationService.listApplications(page, size, null);
+        PageResult<MakeupArtistApplication> pageResult = new PageResult<>(
+                result.getRecords(), result.getTotal(), result.getCurrent(), result.getSize());
+        return Result.success(pageResult);
+    }
+
+    @PutMapping("/applications/artist/{id}")
+    public Result<Void> reviewArtistApplication(@PathVariable Long id, @RequestParam String action) {
+        checkAdmin();
+
+        if ("approve".equals(action)) {
+            makeupArtistApplicationService.approveApplication(id);
+        } else if ("reject".equals(action)) {
+            makeupArtistApplicationService.rejectApplication(id);
+        } else {
+            throw new BusinessException("无效的操作");
+        }
+        return Result.success("审核成功", null);
+    }
+
+    @GetMapping("/applications/merchant")
+    public Result<PageResult<MerchantApplication>> listMerchantApplications(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        checkAdmin();
+
+        Page<MerchantApplication> result = merchantApplicationService.listApplications(page, size, null);
+        PageResult<MerchantApplication> pageResult = new PageResult<>(
+                result.getRecords(), result.getTotal(), result.getCurrent(), result.getSize());
+        return Result.success(pageResult);
+    }
+
+    @PutMapping("/applications/merchant/{id}")
+    public Result<Void> reviewMerchantApplication(@PathVariable Long id, @RequestParam String action) {
+        checkAdmin();
+
+        if ("approve".equals(action)) {
+            merchantApplicationService.approveApplication(id);
+        } else if ("reject".equals(action)) {
+            merchantApplicationService.rejectApplication(id);
+        } else {
+            throw new BusinessException("无效的操作");
+        }
+        return Result.success("审核成功", null);
     }
 }

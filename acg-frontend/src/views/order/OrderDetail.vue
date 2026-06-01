@@ -102,13 +102,27 @@ function getStatusType(status) {
   return statusTypeMap[status] || 'info'
 }
 
+function parseImage(img) {
+  if (!img) return ''
+  if (img.startsWith('[')) {
+    try {
+      const arr = JSON.parse(img)
+      return Array.isArray(arr) && arr.length > 0 ? arr[0] : ''
+    } catch {
+      return ''
+    }
+  }
+  if (img.startsWith('http')) return img
+  return ''
+}
+
 const orderItems = computed(() => {
   const items = order.value.items
   if (!items) return []
   if (Array.isArray(items)) {
     return items.map(item => ({
       name: item.productName,
-      image: item.productImage,
+      image: parseImage(item.productImage),
       price: item.price,
       quantity: item.quantity,
     }))

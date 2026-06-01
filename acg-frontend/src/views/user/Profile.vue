@@ -16,6 +16,25 @@
         </div>
       </el-card>
 
+      <el-card v-if="isMerchant || isArtist" shadow="never" class="publish-card">
+        <div class="publish-section">
+          <div class="publish-title">
+            <el-icon :size="20"><Promotion /></el-icon>
+            <span>快捷发布</span>
+          </div>
+          <div class="publish-actions">
+            <el-button v-if="isMerchant" type="warning" size="large" round @click="router.push('/publish-product')" class="publish-btn merchant-btn">
+              <el-icon :size="20"><ShoppingBag /></el-icon>
+              发布商品
+            </el-button>
+            <el-button v-if="isArtist" type="primary" size="large" round @click="router.push('/publish-service')" class="publish-btn artist-btn">
+              <el-icon :size="20"><MagicStick /></el-icon>
+              发布化妆服务
+            </el-button>
+          </div>
+        </div>
+      </el-card>
+
       <div class="quick-links">
         <div class="link-card" @click="router.push('/orders')">
           <div class="link-icon">
@@ -49,7 +68,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { List, MagicStick, Star, Setting } from '@element-plus/icons-vue'
+import { List, MagicStick, Star, Setting, ShoppingBag, Promotion } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
 
 const router = useRouter()
@@ -71,6 +90,8 @@ const roleTagTypeMap = {
 
 const roleText = computed(() => roleMap[userStore.user?.role] || '普通用户')
 const roleTagType = computed(() => roleTagTypeMap[userStore.user?.role] || 'info')
+const isMerchant = computed(() => userStore.user?.role === 2 || userStore.user?.role >= 3)
+const isArtist = computed(() => userStore.user?.role === 1 || userStore.user?.role >= 3)
 </script>
 
 <style lang="scss" scoped>
@@ -120,6 +141,54 @@ const roleTagType = computed(() => roleTagTypeMap[userStore.user?.role] || 'info
           opacity: 0.85;
         }
       }
+    }
+  }
+}
+
+.publish-card {
+  border-radius: 16px;
+  border: none;
+  margin-bottom: 24px;
+  overflow: hidden;
+
+  .publish-section {
+    .publish-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      color: #303133;
+      margin-bottom: 16px;
+    }
+
+    .publish-actions {
+      display: flex;
+      gap: 16px;
+    }
+
+    .publish-btn {
+      flex: 1;
+      height: 52px;
+      font-size: 16px;
+      font-weight: 600;
+      border-radius: 12px;
+      transition: all 0.3s;
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+      }
+    }
+
+    .merchant-btn {
+      background: linear-gradient(135deg, #f59e0b, #ef4444);
+      border: none;
+    }
+
+    .artist-btn {
+      background: linear-gradient(135deg, #ec4899, #a855f7);
+      border: none;
     }
   }
 }

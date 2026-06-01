@@ -3,7 +3,7 @@ import request from '@/utils/request'
 export const getDashboardApi = () => request.get('/admin/dashboard')
 export const getUsersApi = (params) => request.get('/admin/users', { params })
 export const updateUserStatusApi = (id, deleted) => request.put(`/admin/users/${id}/status`, null, { params: { deleted } })
-export const updateUserRoleApi = (id, role) => request.put(`/admin/users/${id}/role`, null, { params: { role } })
+export const updateUserRoleApi = (id, roleCode) => request.put(`/admin/users/${id}/role`, null, { params: { roleCode } })
 export const getAdminProductsApi = (params) => request.get('/admin/products', { params })
 export const createProductApi = (data) => request.post('/admin/products', data)
 export const updateProductApi = (id, data) => request.put(`/admin/products/${id}`, data)
