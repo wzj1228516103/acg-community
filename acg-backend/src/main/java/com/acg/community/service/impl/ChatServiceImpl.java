@@ -31,7 +31,9 @@ public class ChatServiceImpl extends ServiceImpl<ChatRoomMapper, ChatRoom> imple
 
     @Override
     public ChatRoom getOrCreateRoom(Long userId1, Long userId2) {
-        List<ChatRoom> rooms = lambdaQuery().list();
+        List<ChatRoom> rooms = lambdaQuery()
+                .like(ChatRoom::getParticipantsJson, String.valueOf(userId1))
+                .list();
         List<Long> targetSorted = Arrays.asList(userId1, userId2);
         targetSorted.sort(Comparator.naturalOrder());
 
@@ -93,5 +95,20 @@ public class ChatServiceImpl extends ServiceImpl<ChatRoomMapper, ChatRoom> imple
                         .eq(Message::getRoomId, roomId)
                         .orderByAsc(Message::getCreatedAt)
         );
+    }
+
+    @Override
+    public void verifyRoomParticipant(Long roomId, Long userId) {
+        ChatRoom room = getById(roomId);
+        if (room == null) {
+            throw new BusinessException("聊天室不存在");
+        }
+        if (room.getParticipantsJson() == null) {
+            throw new BusinessException("无权访问该聊天室");
+        }
+        List<Long> participants = JSON.parseArray(room.getParticipantsJson(), Long.class);
+        if (!participants.contains(userId)) {
+            throw new BusinessException("无权访问该聊天室");
+        }
     }
 }

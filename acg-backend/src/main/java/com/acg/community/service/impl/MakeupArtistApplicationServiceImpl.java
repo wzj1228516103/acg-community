@@ -8,6 +8,7 @@ import com.acg.community.exception.BusinessException;
 import com.acg.community.mapper.MakeupArtistApplicationMapper;
 import com.acg.community.mapper.UserMapper;
 import com.acg.community.service.MakeupArtistApplicationService;
+import com.acg.community.util.RedisUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -25,6 +26,9 @@ public class MakeupArtistApplicationServiceImpl extends ServiceImpl<MakeupArtist
 
     @Resource
     private UserMapper userMapper;
+
+    @Resource
+    private RedisUtil redisUtil;
 
     @Override
     public Page<MakeupArtistApplication> listApplications(int page, int size, ApplyStatus status) {
@@ -50,6 +54,7 @@ public class MakeupArtistApplicationServiceImpl extends ServiceImpl<MakeupArtist
         userMapper.update(null, new com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<User>()
                 .eq(User::getId, app.getUserId())
                 .set(User::getRole, Role.MAKEUP_ARTIST));
+        redisUtil.delete("acg:user:info:" + app.getUserId());
         log.info("化妆师申请通过, applicationId={}, userId={}", id, app.getUserId());
     }
 
@@ -64,5 +69,22 @@ public class MakeupArtistApplicationServiceImpl extends ServiceImpl<MakeupArtist
         }
         lambdaUpdate().eq(MakeupArtistApplication::getId, id).set(MakeupArtistApplication::getStatus, ApplyStatus.REJECTED).update();
         log.info("化妆师申请驳回, applicationId={}", id);
+    }
+
+    @Override
+    public Long submitApplication(Long userId, String reason) {
+        long count = lambdaQuery()
+                .eq(MakeupArtistApplication::getUserId, userId)
+                .eq(MakeupArtistApplication::getStatus, ApplyStatus.PENDING)
+                .count();
+        if (count > 0) {
+            throw new BusinessException("您已有待审核的申请，请等待审核");
+        }
+        MakeupArtistApplication app = new MakeupArtistApplication();
+        app.setUserId(userId);
+        app.setReason(reason);
+        app.setStatus(ApplyStatus.PENDING);
+        applicationMapper.insert(app);
+        return app.getId();
     }
 }

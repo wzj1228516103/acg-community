@@ -48,19 +48,22 @@ public class OrderController {
 
     @PutMapping("/{id}/pay")
     public Result<Void> payOrder(@PathVariable Long id) {
-        orderService.updateOrderStatus(id, com.acg.community.enums.OrderStatus.PAID);
+        Long userId = StpUtil.getLoginIdAsLong();
+        orderService.updateOrderStatus(id, userId, com.acg.community.enums.OrderStatus.PAID);
         return Result.success("支付成功", null);
     }
 
     @PutMapping("/{id}/cancel")
     public Result<Void> cancelOrder(@PathVariable Long id) {
-        orderService.updateOrderStatus(id, com.acg.community.enums.OrderStatus.CANCELLED);
+        Long userId = StpUtil.getLoginIdAsLong();
+        orderService.updateOrderStatus(id, userId, com.acg.community.enums.OrderStatus.CANCELLED);
         return Result.success("取消成功", null);
     }
 
     @PutMapping("/{id}/receive")
     public Result<Void> confirmReceive(@PathVariable Long id) {
-        orderService.updateOrderStatus(id, com.acg.community.enums.OrderStatus.COMPLETED);
+        Long userId = StpUtil.getLoginIdAsLong();
+        orderService.updateOrderStatus(id, userId, com.acg.community.enums.OrderStatus.COMPLETED);
         return Result.success("确认收货成功", null);
     }
 }

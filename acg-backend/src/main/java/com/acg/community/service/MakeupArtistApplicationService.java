@@ -9,4 +9,6 @@ public interface MakeupArtistApplicationService extends IService<MakeupArtistApp
     Page<MakeupArtistApplication> listApplications(int page, int size, ApplyStatus status);
     void approveApplication(Long id);
     void rejectApplication(Long id);
+
+    Long submitApplication(Long userId, String reason);
 }

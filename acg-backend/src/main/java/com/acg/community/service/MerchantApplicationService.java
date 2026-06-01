@@ -9,4 +9,6 @@ public interface MerchantApplicationService extends IService<MerchantApplication
     Page<MerchantApplication> listApplications(int page, int size, ApplyStatus status);
     void approveApplication(Long id);
     void rejectApplication(Long id);
+
+    Long submitApplication(Long userId, String reason, String shopName, String businessLicense);
 }

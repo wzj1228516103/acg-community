@@ -15,4 +15,6 @@ public interface ChatService extends IService<ChatRoom> {
     void sendMessage(Long roomId, Long senderId, String content);
 
     List<Message> getRoomMessages(Long roomId);
+
+    void verifyRoomParticipant(Long roomId, Long userId);
 }

@@ -2,7 +2,7 @@ package com.acg.community.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.RandomUtil;
-import cn.hutool.crypto.digest.DigestUtil;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import com.acg.community.dto.LoginDTO;
 import com.acg.community.dto.RegisterDTO;
 import com.acg.community.dto.UserUpdateDTO;
@@ -24,6 +24,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     private static final long USER_CACHE_TTL = 3600;
     private static final String USER_CACHE_KEY = "acg:user:info:";
+    private static final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     @Resource
     private UserMapper userMapper;
@@ -39,8 +40,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (user == null) {
             throw new BusinessException("用户名或密码错误");
         }
-        String md5Password = DigestUtil.md5Hex(dto.getPassword());
-        if (!md5Password.equals(user.getPassword())) {
+        if (!passwordEncoder.matches(dto.getPassword(), user.getPassword())) {
             throw new BusinessException("用户名或密码错误");
         }
         UserVO vo = toUserVO(user);
@@ -61,7 +61,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
         User user = new User();
         user.setUsername(dto.getUsername());
-        user.setPassword(DigestUtil.md5Hex(dto.getPassword()));
+        user.setPassword(passwordEncoder.encode(dto.getPassword()));
         user.setRole(Role.USER);
         user.setNickname("漫小团_" + RandomUtil.randomString(4));
         userMapper.insert(user);

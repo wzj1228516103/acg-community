@@ -44,6 +44,8 @@ public class ChatController {
 
     @GetMapping("/messages")
     public Result<List<Message>> getMessages(@RequestParam Long roomId) {
+        Long userId = StpUtil.getLoginIdAsLong();
+        chatService.verifyRoomParticipant(roomId, userId);
         return Result.success(chatService.getRoomMessages(roomId));
     }
 }

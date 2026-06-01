@@ -10,6 +10,7 @@ import com.acg.community.enums.OrderStatus;
 import com.acg.community.enums.Role;
 import com.acg.community.exception.BusinessException;
 import com.acg.community.service.*;
+import com.acg.community.util.RedisUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +36,7 @@ public class AdminController {
     private final MakeupServiceService makeupServiceService;
     private final MakeupArtistApplicationService makeupArtistApplicationService;
     private final MerchantApplicationService merchantApplicationService;
+    private final RedisUtil redisUtil;
 
     public AdminController(UserService userService,
                            ProductService productService,
@@ -42,7 +44,8 @@ public class AdminController {
                            OrderService orderService,
                            MakeupServiceService makeupServiceService,
                            MakeupArtistApplicationService makeupArtistApplicationService,
-                           MerchantApplicationService merchantApplicationService) {
+                           MerchantApplicationService merchantApplicationService,
+                           RedisUtil redisUtil) {
         this.userService = userService;
         this.productService = productService;
         this.categoryService = categoryService;
@@ -50,6 +53,7 @@ public class AdminController {
         this.makeupServiceService = makeupServiceService;
         this.makeupArtistApplicationService = makeupArtistApplicationService;
         this.merchantApplicationService = merchantApplicationService;
+        this.redisUtil = redisUtil;
     }
 
     private void checkAdmin() {
@@ -76,9 +80,10 @@ public class AdminController {
         todayOrderWrapper.ge(Order::getCreatedAt, todayStart);
         long todayOrderCount = orderService.count(todayOrderWrapper);
 
-        LambdaQueryWrapper<Order> completedWrapper = new LambdaQueryWrapper<>();
-        completedWrapper.ne(Order::getStatus, OrderStatus.CANCELLED);
-        List<Order> orders = orderService.list(completedWrapper);
+        LambdaQueryWrapper<Order> allOrderWrapper = new LambdaQueryWrapper<>();
+        allOrderWrapper.ne(Order::getStatus, OrderStatus.CANCELLED);
+        allOrderWrapper.select(Order::getStatus, Order::getTotalAmount);
+        List<Order> orders = orderService.list(allOrderWrapper);
         BigDecimal totalAmount = orders.stream()
                 .map(Order::getTotalAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -109,7 +114,10 @@ public class AdminController {
             ow.ge(Order::getCreatedAt, dayStart).lt(Order::getCreatedAt, dayEnd);
             dailyOrders.add(orderService.count(ow));
 
-            List<Order> dayOrders = orderService.list(ow);
+            List<Order> dayOrders = orderService.list(new LambdaQueryWrapper<Order>()
+                    .ge(Order::getCreatedAt, dayStart)
+                    .lt(Order::getCreatedAt, dayEnd)
+                    .select(Order::getStatus, Order::getTotalAmount));
             BigDecimal dayAmount = dayOrders.stream()
                     .filter(o -> o.getStatus() != OrderStatus.CANCELLED)
                     .map(Order::getTotalAmount)
@@ -178,6 +186,7 @@ public class AdminController {
         }
         user.setDeleted(user.getDeleted() != null && user.getDeleted() == 1 ? 0 : 1);
         userService.updateById(user);
+        redisUtil.delete("acg:user:info:" + id);
         return Result.success("操作成功", null);
     }
 
@@ -191,6 +200,7 @@ public class AdminController {
         }
         user.setRole(Role.of(roleCode));
         userService.updateById(user);
+        redisUtil.delete("acg:user:info:" + id);
         return Result.success("角色更新成功", null);
     }
 
@@ -249,6 +259,7 @@ public class AdminController {
         checkAdmin();
 
         productService.save(product);
+        redisUtil.deleteByPrefix("acg:product:list:");
         return Result.success("创建成功", null);
     }
 
@@ -258,6 +269,8 @@ public class AdminController {
 
         product.setId(id);
         productService.updateById(product);
+        redisUtil.deleteByPrefix("acg:product:list:");
+        redisUtil.delete("acg:product:detail:" + id);
         return Result.success("更新成功", null);
     }
 
@@ -271,6 +284,8 @@ public class AdminController {
         }
         product.setStatus(product.getStatus() == GoodsStatus.ACTIVE ? GoodsStatus.INACTIVE : GoodsStatus.ACTIVE);
         productService.updateById(product);
+        redisUtil.deleteByPrefix("acg:product:list:");
+        redisUtil.delete("acg:product:detail:" + id);
         return Result.success("操作成功", null);
     }
 
@@ -288,6 +303,7 @@ public class AdminController {
         checkAdmin();
 
         categoryService.save(category);
+        redisUtil.delete("acg:category:list");
         return Result.success("创建成功", null);
     }
 
@@ -297,6 +313,7 @@ public class AdminController {
 
         category.setId(id);
         categoryService.updateById(category);
+        redisUtil.delete("acg:category:list");
         return Result.success("更新成功", null);
     }
 
@@ -305,6 +322,7 @@ public class AdminController {
         checkAdmin();
 
         categoryService.removeById(id);
+        redisUtil.delete("acg:category:list");
         return Result.success("删除成功", null);
     }
 
@@ -397,6 +415,8 @@ public class AdminController {
         }
         service.setStatus(service.getStatus() == GoodsStatus.ACTIVE ? GoodsStatus.INACTIVE : GoodsStatus.ACTIVE);
         makeupServiceService.updateById(service);
+        redisUtil.deleteByPrefix("acg:makeup:list:");
+        redisUtil.delete("acg:makeup:detail:" + id);
         return Result.success("操作成功", null);
     }
 

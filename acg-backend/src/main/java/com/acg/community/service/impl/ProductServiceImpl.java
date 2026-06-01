@@ -129,7 +129,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         if (product.getPrice() == null) {
             throw new BusinessException("商品价格不能为空");
         }
-        product.setStatus(GoodsStatus.ACTIVE);
+        product.setStatus(GoodsStatus.INACTIVE);
         productMapper.insert(product);
         redisUtil.deleteByPrefix(CACHE_KEY_LIST);
         log.info("商品创建成功: {}", product.getName());

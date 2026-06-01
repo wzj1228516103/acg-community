@@ -25,4 +25,25 @@ public class MakeupBookingController {
         Long bookingId = makeupBookingService.createBooking(userId, dto);
         return Result.success("预约成功", bookingId);
     }
+
+    @PutMapping("/{id}/confirm")
+    public Result<Void> confirmBooking(@PathVariable Long id) {
+        Long userId = StpUtil.getLoginIdAsLong();
+        makeupBookingService.confirmBooking(id, userId);
+        return Result.success("确认成功", null);
+    }
+
+    @PutMapping("/{id}/complete")
+    public Result<Void> completeBooking(@PathVariable Long id) {
+        Long userId = StpUtil.getLoginIdAsLong();
+        makeupBookingService.completeBooking(id, userId);
+        return Result.success("完成成功", null);
+    }
+
+    @PutMapping("/{id}/cancel")
+    public Result<Void> cancelBooking(@PathVariable Long id) {
+        Long userId = StpUtil.getLoginIdAsLong();
+        makeupBookingService.cancelBooking(id, userId);
+        return Result.success("取消成功", null);
+    }
 }

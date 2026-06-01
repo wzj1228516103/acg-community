@@ -20,4 +20,6 @@ public interface OrderService extends IService<Order> {
     OrderVO getOrderDetail(Long orderId, Long userId);
 
     void updateOrderStatus(Long orderId, OrderStatus status);
+
+    void updateOrderStatus(Long orderId, Long userId, OrderStatus status);
 }
