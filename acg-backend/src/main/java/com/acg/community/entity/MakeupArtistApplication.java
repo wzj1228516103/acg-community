@@ -26,4 +26,6 @@ public class MakeupArtistApplication extends BaseEntity {
     private String selfIntro;
 
     private ApplyStatus status;
+
+    private String reason;
 }

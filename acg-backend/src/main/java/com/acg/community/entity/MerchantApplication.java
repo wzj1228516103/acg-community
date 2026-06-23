@@ -20,4 +20,8 @@ public class MerchantApplication extends BaseEntity {
     private String contactInfo;
 
     private ApplyStatus status;
+
+    private String reason;
+
+    private String shopName;
 }
