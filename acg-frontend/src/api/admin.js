@@ -20,3 +20,4 @@ export const getArtistApplicationsApi = (params) => request.get('/admin/applicat
 export const reviewArtistApplicationApi = (id, action) => request.put(`/admin/applications/artist/${id}`, null, { params: { action } })
 export const getMerchantApplicationsApi = (params) => request.get('/admin/applications/merchant', { params })
 export const reviewMerchantApplicationApi = (id, action) => request.put(`/admin/applications/merchant/${id}`, null, { params: { action } })
+export const uploadImageApi = (formData) => request.post('/upload/image', formData, { headers: { 'Content-Type': 'multipart/form-data' } })

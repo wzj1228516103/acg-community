@@ -395,5 +395,125 @@ onMounted(async () => {
       }
     }
   }
+
+  @media (max-width: 768px) {
+    .hero-section {
+      padding: 52px 16px 56px;
+
+      .hero-title {
+        font-size: clamp(30px, 9vw, 40px);
+        line-height: 1.25;
+        margin-bottom: 16px;
+      }
+
+      .hero-desc {
+        font-size: 15px;
+        line-height: 1.7;
+        margin-bottom: 24px;
+      }
+
+      .hero-buttons {
+        gap: 10px;
+
+        :deep(.el-button) {
+          min-width: 112px;
+          padding: 10px 14px;
+        }
+      }
+    }
+
+    .stats-section {
+      padding: 24px 12px;
+
+      .stats-container {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .stat-card {
+        min-width: 0;
+        padding: 16px 4px;
+        border-radius: 12px;
+
+        .stat-number {
+          font-size: clamp(22px, 7vw, 30px);
+        }
+
+        .stat-label {
+          font-size: 11px;
+          white-space: nowrap;
+        }
+      }
+    }
+
+    .section {
+      padding: 40px 12px;
+
+      .section-title {
+        font-size: 24px;
+        margin-bottom: 24px;
+      }
+    }
+
+    .service-grid,
+    .product-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .service-card,
+    .product-card {
+      border-radius: 12px;
+
+      .card-image {
+        height: 145px;
+      }
+
+      .card-content {
+        padding: 12px;
+
+        h3 {
+          font-size: 14px;
+          margin-bottom: 8px;
+        }
+      }
+
+      .card-info,
+      .card-meta {
+        gap: 4px;
+        margin-bottom: 8px;
+      }
+
+      .price {
+        font-size: 17px;
+      }
+    }
+
+    .services-section {
+      .services-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .platform-service-card {
+        padding: 20px 10px;
+
+        .service-icon {
+          width: 50px;
+          height: 50px;
+          margin-bottom: 10px;
+        }
+
+        h3 {
+          font-size: 14px;
+        }
+
+        p {
+          font-size: 12px;
+        }
+      }
+    }
+  }
 }
 </style>

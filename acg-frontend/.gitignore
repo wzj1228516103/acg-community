@@ -1,0 +1,15 @@
+node_modules/
+dist/
+dist.zip
+.vite/
+*.local
+.env
+.env.*
+!.env.example
+
+# IDE and OS files
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db

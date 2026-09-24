@@ -1,0 +1,15 @@
+target/
+uploads/
+*.log
+
+# IDE and OS files
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+
+# Local configuration overrides
+application-local.yml
+application-prod.yml
+

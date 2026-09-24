@@ -9,13 +9,16 @@
             </div>
             <span class="logo-text">漫化</span>
           </router-link>
-          <nav class="nav-links">
+          <nav class="nav-links" :class="{ 'is-open': mobileNavOpen }">
             <router-link v-for="link in navLinks" :key="link.path" :to="link.path" class="nav-link">
               {{ link.name }}
             </router-link>
           </nav>
         </div>
         <div class="header-right">
+          <el-button class="mobile-menu-button" circle text @click="mobileNavOpen = !mobileNavOpen" aria-label="打开导航菜单">
+            <el-icon :size="22"><Close v-if="mobileNavOpen" /><Menu v-else /></el-icon>
+          </el-button>
           <template v-if="userStore.isLoggedIn">
             <router-link to="/cart" class="header-action">
               <el-badge :value="cartStore.totalCount" :hidden="cartStore.totalCount === 0">
@@ -109,14 +112,16 @@
 </template>
 
 <script setup>
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { Promotion, ShoppingCart, ChatDotSquare, ArrowDown } from '@element-plus/icons-vue'
+import { Promotion, ShoppingCart, ChatDotSquare, ArrowDown, Menu, Close } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
 import { useCartStore } from '@/stores/cart'
 
 const router = useRouter()
 const userStore = useUserStore()
 const cartStore = useCartStore()
+const mobileNavOpen = ref(false)
 
 const navLinks = [
   { name: '首页', path: '/' },
@@ -214,6 +219,12 @@ function handleCommand(command) {
     }
   }
 
+  .mobile-menu-button {
+    display: none;
+    color: white;
+    margin-right: -8px;
+  }
+
   .header-right {
     display: flex;
     align-items: center;
@@ -261,6 +272,80 @@ function handleCommand(command) {
 .app-main {
   flex: 1;
   background: #f8fafc;
+}
+
+@media (max-width: 768px) {
+  .app-header {
+    .header-container {
+      height: 56px;
+      padding: 0 12px;
+    }
+
+    .header-left {
+      gap: 0;
+    }
+
+    .logo {
+      gap: 7px;
+
+      .logo-icon {
+        width: 32px;
+        height: 32px;
+      }
+
+      .logo-text {
+        font-size: 20px;
+      }
+    }
+
+    .nav-links {
+      display: none;
+      position: absolute;
+      top: 56px;
+      left: 0;
+      right: 0;
+      padding: 8px 12px 12px;
+      background: linear-gradient(135deg, #ec4899, #a855f7, #6366f1);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.16);
+      flex-direction: column;
+      gap: 2px;
+
+      &.is-open {
+        display: flex;
+      }
+
+      .nav-link {
+        padding: 11px 14px;
+        border-radius: 10px;
+        font-size: 15px;
+      }
+    }
+
+    .mobile-menu-button {
+      display: inline-flex;
+    }
+
+    .header-right {
+      gap: 2px;
+
+      .header-action {
+        padding: 7px;
+      }
+
+      .user-info {
+        padding: 4px;
+
+        .user-name,
+        > .el-icon {
+          display: none;
+        }
+      }
+
+      :deep(.el-button) {
+        padding: 8px 10px;
+      }
+    }
+  }
 }
 
 .app-footer {
@@ -349,6 +434,43 @@ function handleCommand(command) {
     text-align: center;
     font-size: 13px;
     color: rgba(255, 255, 255, 0.5);
+  }
+}
+
+@media (max-width: 768px) {
+  .app-footer {
+    padding: 32px 0 18px;
+
+    .footer-container {
+      padding: 0 16px;
+    }
+
+    .footer-content {
+      grid-template-columns: 1fr 1fr;
+      gap: 24px 16px;
+      margin-bottom: 24px;
+
+      .footer-brand {
+        grid-column: 1 / -1;
+      }
+    }
+
+    .footer-stats {
+      gap: 12px;
+      padding: 16px 8px;
+
+      .stat-item {
+        flex: 1;
+
+        .stat-number {
+          font-size: 21px;
+        }
+
+        .stat-label {
+          font-size: 11px;
+        }
+      }
+    }
   }
 }
 </style>

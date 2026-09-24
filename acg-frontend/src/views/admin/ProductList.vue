@@ -105,7 +105,25 @@
           </el-select>
         </el-form-item>
         <el-form-item label="图片">
-          <el-input v-model="formData.imagesStr" type="textarea" :rows="3" placeholder='JSON数组，如：["url1","url2"]' />
+          <el-upload
+            :action="uploadUrl"
+            name="file"
+            :headers="uploadHeaders"
+            :on-success="handleUploadSuccess"
+            :on-error="handleUploadError"
+            :before-upload="beforeUpload"
+            :show-file-list="false"
+            accept="image/*"
+          >
+            <el-button type="primary" size="small">上传图片</el-button>
+          </el-upload>
+          <div class="image-list" v-if="formData.images.length > 0">
+            <div v-for="(url, index) in formData.images" :key="index" class="image-item">
+              <el-image :src="url" fit="cover" class="image-thumb" :preview-src-list="[url]" preview-teleported />
+              <el-input v-model="formData.images[index]" placeholder="图片URL" size="small" class="image-url-input" />
+              <el-button type="danger" :icon="Delete" circle size="small" @click="formData.images.splice(index, 1)" />
+            </div>
+          </div>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -117,10 +135,16 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Picture } from '@element-plus/icons-vue'
+import { Picture, Delete } from '@element-plus/icons-vue'
 import { getAdminProductsApi, createProductApi, updateProductApi, updateProductStatusApi, getCategoriesApi } from '@/api/admin'
+
+const uploadUrl = '/api/upload/image'
+const uploadHeaders = computed(() => {
+  const token = localStorage.getItem('token')
+  return token ? { Authorization: token } : {}
+})
 
 function parseImages(images) {
   if (!images) return []
@@ -166,7 +190,7 @@ const formData = reactive({
   price: 0,
   stock: 0,
   categoryId: '',
-  imagesStr: '[]',
+  images: [],
 })
 
 const formRules = {
@@ -225,7 +249,7 @@ function openDialog(row) {
     formData.price = row.price
     formData.stock = row.stock
     formData.categoryId = row.categoryId
-    formData.imagesStr = row.images ? JSON.stringify(row.images) : '[]'
+    formData.images = parseImages(row.images)
   } else {
     isEdit.value = false
     editId.value = null
@@ -234,22 +258,41 @@ function openDialog(row) {
     formData.price = 0
     formData.stock = 0
     formData.categoryId = ''
-    formData.imagesStr = '[]'
+    formData.images = []
   }
   dialogVisible.value = true
+}
+
+function beforeUpload(file) {
+  const isImage = file.type.startsWith('image/')
+  const isLt10M = file.size / 1024 / 1024 < 10
+  if (!isImage) {
+    ElMessage.error('只能上传图片文件')
+    return false
+  }
+  if (!isLt10M) {
+    ElMessage.error('图片大小不能超过 10MB')
+    return false
+  }
+  return true
+}
+
+function handleUploadSuccess(response) {
+  if (response.code === 200) {
+    formData.images.push(response.data)
+    ElMessage.success('上传成功')
+  } else {
+    ElMessage.error(response.message || '上传失败')
+  }
+}
+
+function handleUploadError() {
+  ElMessage.error('上传失败，请重试')
 }
 
 async function handleSubmit() {
   const valid = await formRef.value?.validate().catch(() => false)
   if (!valid) return
-
-  let images = []
-  try {
-    images = JSON.parse(formData.imagesStr)
-    if (!Array.isArray(images)) images = []
-  } catch {
-    images = []
-  }
 
   const data = {
     name: formData.name,
@@ -257,7 +300,9 @@ async function handleSubmit() {
     price: formData.price,
     stock: formData.stock,
     categoryId: formData.categoryId,
-    images,
+    // 后端 Product.images 字段存储为字符串（数据库中保存 JSON 数组），
+    // 不能直接把数组交给 Jackson 反序列化。
+    images: JSON.stringify(formData.images.filter(u => u && u.trim())),
   }
 
   submitting.value = true
@@ -350,6 +395,29 @@ onMounted(() => {
   .no-image {
     font-size: 12px;
     color: #c0c4cc;
+  }
+
+  .image-list {
+    margin-top: 8px;
+    width: 100%;
+
+    .image-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+
+      .image-thumb {
+        width: 60px;
+        height: 60px;
+        border-radius: 6px;
+        flex-shrink: 0;
+      }
+
+      .image-url-input {
+        flex: 1;
+      }
+    }
   }
 }
 </style>

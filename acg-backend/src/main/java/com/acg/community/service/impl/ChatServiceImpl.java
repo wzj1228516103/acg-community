@@ -67,6 +67,7 @@ public class ChatServiceImpl extends ServiceImpl<ChatRoomMapper, ChatRoom> imple
 
     @Override
     public void sendMessage(Long roomId, Long senderId, String content) {
+        verifyRoomParticipant(roomId, senderId);
         ChatRoom room = getById(roomId);
         if (room == null) {
             throw new BusinessException("聊天室不存在");
@@ -77,10 +78,9 @@ public class ChatServiceImpl extends ServiceImpl<ChatRoomMapper, ChatRoom> imple
         message.setContent(content);
         message.setMessageType("TEXT");
         messageMapper.insert(message);
-        lambdaUpdate()
+        chatRoomMapper.update(null, new com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<ChatRoom>()
                 .eq(ChatRoom::getId, roomId)
-                .set(ChatRoom::getUpdatedAt, LocalDateTime.now())
-                .update();
+                .set(ChatRoom::getUpdatedAt, LocalDateTime.now()));
         log.info("发送消息: roomId={}, senderId={}", roomId, senderId);
     }
 

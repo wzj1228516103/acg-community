@@ -197,4 +197,50 @@ function handleCommand(command) {
   padding: 24px;
   overflow-y: auto;
 }
+
+@media (max-width: 768px) {
+  .admin-sidebar {
+    width: 64px;
+
+    .sidebar-logo {
+      height: 56px;
+
+      span {
+        display: none;
+      }
+    }
+
+    .sidebar-menu {
+      :deep(.el-menu-item) {
+        justify-content: center;
+        margin: 2px 6px;
+        padding: 0 !important;
+
+        span {
+          display: none;
+        }
+      }
+    }
+  }
+
+  .admin-header {
+    height: 56px;
+    padding: 0 12px;
+
+    :deep(.el-breadcrumb) {
+      min-width: 0;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
+    .header-username,
+    .header-user > .el-icon {
+      display: none;
+    }
+  }
+
+  .admin-content {
+    padding: 12px;
+  }
+}
 </style>

@@ -40,17 +40,26 @@
           </el-form-item>
 
           <el-form-item label="商品图片">
-            <div class="image-urls">
-              <div v-for="(url, index) in form.imageUrls" :key="index" class="image-url-row">
-                <el-input v-model="form.imageUrls[index]" placeholder="输入图片URL地址" clearable>
-                  <template #prepend>{{ index + 1 }}</template>
-                </el-input>
-                <el-button type="danger" :icon="Delete" circle size="small" @click="removeImageUrl(index)" v-if="form.imageUrls.length > 1" />
+            <div class="image-upload">
+              <el-upload
+                action="/api/upload/image"
+                :headers="uploadHeaders"
+                :show-file-list="false"
+                :before-upload="beforeImageUpload"
+                :on-success="handleImageUploadSuccess"
+                :on-error="handleImageUploadError"
+                accept="image/*"
+              >
+                <el-button type="primary" size="small">上传图片</el-button>
+              </el-upload>
+              <div v-if="form.imageUrls.length" class="image-list">
+                <div v-for="(url, index) in form.imageUrls" :key="url + index" class="image-item">
+                  <el-image :src="url" fit="cover" class="image-thumb" :preview-src-list="form.imageUrls" preview-teleported />
+                  <span class="image-index">{{ index + 1 }}{{ index === 0 ? '（封面）' : '' }}</span>
+                  <el-button type="danger" :icon="Delete" circle size="small" @click="removeImageUrl(index)" />
+                </div>
               </div>
-              <el-button type="primary" link @click="addImageUrl" class="add-url-btn">
-                <el-icon><Plus /></el-icon> 添加图片URL
-              </el-button>
-              <div class="image-tip">请输入图片的URL地址，第一张将作为封面图</div>
+              <div class="image-tip">支持 jpg、png、gif、webp、bmp，单张不超过 10MB；第一张图片将作为封面图</div>
             </div>
           </el-form-item>
 
@@ -66,10 +75,10 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { ArrowLeft, Delete, Plus } from '@element-plus/icons-vue'
+import { ArrowLeft, Delete } from '@element-plus/icons-vue'
 import { createProductApi, getCategoriesApi } from '@/api/product'
 
 const router = useRouter()
@@ -83,7 +92,12 @@ const form = reactive({
   price: 0,
   stock: 0,
   description: '',
-  imageUrls: [''],
+  imageUrls: [],
+})
+
+const uploadHeaders = computed(() => {
+  const token = localStorage.getItem('token')
+  return token ? { Authorization: token } : {}
 })
 
 const rules = {
@@ -94,12 +108,35 @@ const rules = {
   description: [{ required: true, message: '请输入商品描述', trigger: 'blur' }],
 }
 
-function addImageUrl() {
-  form.imageUrls.push('')
-}
-
 function removeImageUrl(index) {
   form.imageUrls.splice(index, 1)
+}
+
+function beforeImageUpload(file) {
+  const isImage = file.type.startsWith('image/')
+  const isLt10M = file.size / 1024 / 1024 < 10
+  if (!isImage) {
+    ElMessage.error('只能上传图片文件')
+    return false
+  }
+  if (!isLt10M) {
+    ElMessage.error('图片大小不能超过 10MB')
+    return false
+  }
+  return true
+}
+
+function handleImageUploadSuccess(response) {
+  if (response.code === 200 && response.data) {
+    form.imageUrls.push(response.data)
+    ElMessage.success('图片上传成功')
+  } else {
+    ElMessage.error(response.message || '图片上传失败')
+  }
+}
+
+function handleImageUploadError() {
+  ElMessage.error('图片上传失败，请重试')
 }
 
 async function handleSubmit() {
@@ -166,22 +203,39 @@ onMounted(async () => {
   }
 }
 
-.image-urls {
+.image-upload {
   width: 100%;
 
-  .image-url-row {
+  .image-list {
     display: flex;
-    gap: 8px;
-    margin-bottom: 8px;
-    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 12px;
   }
 
-  .add-url-btn {
-    margin-top: 4px;
-    margin-bottom: 8px;
+  .image-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px;
+    border: 1px solid #ebeef5;
+    border-radius: 8px;
+    background: #fff;
+  }
+
+  .image-thumb {
+    width: 72px;
+    height: 72px;
+    border-radius: 6px;
+  }
+
+  .image-index {
+    font-size: 12px;
+    color: #606266;
   }
 
   .image-tip {
+    margin-top: 8px;
     font-size: 12px;
     color: #909399;
   }

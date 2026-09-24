@@ -61,7 +61,7 @@
       <div class="detail-bottom">
         <el-tabs>
           <el-tab-pane label="商品详情">
-            <div class="description-content" v-html="product.description || '暂无商品详情'" />
+            <div class="description-content">{{ product.description || '暂无商品详情' }}</div>
           </el-tab-pane>
         </el-tabs>
       </div>

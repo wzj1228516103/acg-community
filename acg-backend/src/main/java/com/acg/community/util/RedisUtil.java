@@ -26,6 +26,19 @@ public class RedisUtil {
         }
     }
 
+    public long increment(String key, long seconds) {
+        try {
+            Long count = redisTemplate.opsForValue().increment(key);
+            if (count != null && count == 1) {
+                redisTemplate.expire(key, seconds, TimeUnit.SECONDS);
+            }
+            return count != null ? count : -1;
+        } catch (Exception e) {
+            log.warn("Redis increment failed: key={}, error={}", key, e.getMessage());
+            return -1;
+        }
+    }
+
     @SuppressWarnings("unchecked")
     public <T> T get(String key) {
         try {

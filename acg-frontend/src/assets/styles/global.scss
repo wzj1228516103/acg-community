@@ -12,6 +12,16 @@ html, body {
   -webkit-font-smoothing: antialiased;
 }
 
+html {
+  min-width: 320px;
+  overflow-x: hidden;
+}
+
+body {
+  min-width: 320px;
+  overflow-x: hidden;
+}
+
 a {
   text-decoration: none;
   color: inherit;
@@ -42,4 +52,39 @@ img {
 
 .el-button--primary:hover {
   background: linear-gradient(135deg, #db2777, #9333ea) !important;
+}
+
+@media (max-width: 768px) {
+  .el-message {
+    min-width: 0;
+    max-width: calc(100vw - 32px);
+  }
+
+  .el-dialog {
+    width: calc(100vw - 24px) !important;
+    margin: 12px auto !important;
+  }
+
+  .el-dialog__body {
+    max-height: calc(100vh - 150px);
+    overflow-y: auto;
+  }
+
+  .el-form-item__label {
+    padding-bottom: 4px;
+  }
+
+  .el-table {
+    min-width: 680px;
+  }
+
+  .el-pagination {
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .el-card__body {
+    padding: 16px;
+  }
 }
