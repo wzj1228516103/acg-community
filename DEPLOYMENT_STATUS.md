@@ -2,6 +2,7 @@
 
 ## 已完成
 
+- 移动端适配与 Android wrapper 已提交并推送到 GitHub `main`，提交号：`a2c06f1`。
 - `acg-frontend`: `npm run build` 成功，产物在 `acg-frontend/dist`。
 - `acg-backend`: `mvn clean package -DskipTests` 成功，产物为 `acg-backend/target/acg-community-1.0.0.jar`。
 - 公网站点 `http://39.105.128.249/` 可访问，入口文件与本地最新前端构建一致。
@@ -10,7 +11,7 @@
 
 ## 当前阻塞
 
-本轮无法通过 SSH 更新服务器：服务器 `39.105.128.249:22` 可达，但现有密钥和仓库内旧密码均返回 `Permission denied`。因此没有覆盖线上文件，也没有重启线上服务。
+本轮仍无法通过 SSH 更新服务器：服务器 `39.105.128.249:22` 可达，但现有密钥和仓库内旧密码均返回 `Permission denied`。因此没有覆盖线上文件，也没有重启线上服务。GitHub 已完成更新；拿到有效 SSH 凭据后即可按下方命令发布。
 
 重新发布需要有效的 SSH 私钥/密码，或在宝塔终端执行：
 
