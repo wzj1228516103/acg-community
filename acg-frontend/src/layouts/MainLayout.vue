@@ -149,11 +149,15 @@ function handleCommand(command) {
 <style lang="scss" scoped>
 .app-layout {
   min-height: 100vh;
+  width: 100%;
+  min-width: 0;
   display: flex;
   flex-direction: column;
 }
 
 .app-header {
+  width: 100%;
+  min-width: 0;
   position: sticky;
   top: 0;
   z-index: 100;
@@ -161,6 +165,8 @@ function handleCommand(command) {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 
   .header-container {
+    width: 100%;
+    min-width: 0;
     max-width: 1280px;
     margin: 0 auto;
     padding: 0 24px;
@@ -274,7 +280,7 @@ function handleCommand(command) {
   background: #f8fafc;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .app-header {
     .header-container {
       height: 56px;
@@ -349,6 +355,7 @@ function handleCommand(command) {
 }
 
 .app-footer {
+  width: 100%;
   background: linear-gradient(135deg, #1e1b4b, #831843, #312e81);
   color: white;
   padding: 48px 0 24px;
@@ -437,7 +444,7 @@ function handleCommand(command) {
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .app-footer {
     padding: 32px 0 18px;
 

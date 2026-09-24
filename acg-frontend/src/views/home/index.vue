@@ -159,6 +159,9 @@ onMounted(async () => {
 
 <style lang="scss" scoped>
 .home-page {
+  width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
   .hero-section {
     background: linear-gradient(135deg, #ec4899, #a855f7, #6366f1);
     padding: 80px 24px;
@@ -396,7 +399,7 @@ onMounted(async () => {
     }
   }
 
-  @media (max-width: 768px) {
+  @media (max-width: 1024px) {
     .hero-section {
       padding: 52px 16px 56px;
 

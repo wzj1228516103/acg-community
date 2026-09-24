@@ -15,10 +15,18 @@ html, body {
 html {
   min-width: 320px;
   overflow-x: hidden;
+  width: 100%;
 }
 
 body {
   min-width: 320px;
+  overflow-x: hidden;
+  width: 100%;
+}
+
+#app {
+  width: 100%;
+  min-width: 0;
   overflow-x: hidden;
 }
 
@@ -54,7 +62,7 @@ img {
   background: linear-gradient(135deg, #db2777, #9333ea) !important;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .el-message {
     min-width: 0;
     max-width: calc(100vw - 32px);

@@ -198,7 +198,7 @@ function handleCommand(command) {
   overflow-y: auto;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .admin-sidebar {
     width: 64px;
 
