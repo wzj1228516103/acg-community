@@ -62,6 +62,23 @@ img {
   background: linear-gradient(135deg, #db2777, #9333ea) !important;
 }
 
+// Buttons should shrink with their container instead of forcing a horizontal
+// scroll on narrow phones. Individual actions can still opt into a wider
+// layout with their own max-width.
+.el-button {
+  min-width: 0;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  flex: 0 1 auto;
+}
+
+.el-button > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 @media (max-width: 1024px) {
   .el-message {
     min-width: 0;
@@ -94,5 +111,32 @@ img {
 
   .el-card__body {
     padding: 16px;
+  }
+
+  .el-button {
+    min-height: 36px;
+    padding: 9px 14px;
+  }
+
+  .el-button--small {
+    min-height: 30px;
+    padding: 6px 10px;
+  }
+
+  .el-button--large {
+    min-height: 42px;
+    padding: 10px 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .el-button {
+    padding-right: 12px;
+    padding-left: 12px;
+  }
+
+  .el-button.is-round {
+    padding-right: 14px;
+    padding-left: 14px;
   }
 }

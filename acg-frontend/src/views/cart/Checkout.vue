@@ -54,7 +54,7 @@
           size="large"
           round
           :loading="submitting"
-          style="width: 240px; margin-top: 16px;"
+          class="submit-order-btn"
           @click="handleSubmitOrder"
         >
           提交订单
@@ -213,6 +213,11 @@ async function handleSubmitOrder() {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   text-align: right;
 
+  .submit-order-btn {
+    width: min(240px, 100%);
+    margin-top: 16px;
+  }
+
   .summary-line {
     display: flex;
     justify-content: flex-end;
@@ -237,6 +242,33 @@ async function handleSubmitOrder() {
       font-size: 28px;
       font-weight: bold;
       color: #ec4899;
+    }
+  }
+}
+
+@media (max-width: 640px) {
+  .checkout-page {
+    padding: 20px 12px 40px;
+  }
+
+  .page-title {
+    font-size: 24px;
+  }
+
+  .checkout-summary {
+    padding: 18px 16px;
+
+    .summary-line,
+    .summary-total {
+      gap: 10px;
+    }
+
+    .summary-total .total-price {
+      font-size: 24px;
+    }
+
+    .submit-order-btn {
+      width: 100%;
     }
   }
 }

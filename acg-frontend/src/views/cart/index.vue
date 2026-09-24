@@ -271,4 +271,102 @@ function handleSelectAll(val) {
     color: #e5e7eb;
   }
 }
+
+@media (max-width: 640px) {
+  .cart-page {
+    padding: 20px 12px 148px;
+  }
+
+  .page-title {
+    font-size: 24px;
+    margin-bottom: 16px;
+  }
+
+  .cart-header {
+    display: none;
+  }
+
+  .cart-item {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      "check info action"
+      "check price subtotal"
+      "check quantity quantity";
+    align-items: center;
+    gap: 10px 12px;
+    padding: 14px 12px;
+
+    > .el-checkbox {
+      grid-area: check;
+    }
+
+    .item-info {
+      grid-area: info;
+      min-width: 0;
+      width: auto;
+      gap: 10px;
+
+      .item-image {
+        width: 60px;
+        height: 60px;
+        border-radius: 8px;
+      }
+
+      .item-name {
+        min-width: 0;
+        font-size: 13px;
+      }
+    }
+
+    .item-price {
+      grid-area: price;
+      min-width: 0;
+      text-align: left;
+      font-size: 13px;
+    }
+
+    .item-quantity {
+      grid-area: quantity;
+      justify-content: flex-start;
+    }
+
+    .item-subtotal {
+      grid-area: subtotal;
+      text-align: right;
+      font-size: 15px;
+    }
+
+    .item-action {
+      grid-area: action;
+      justify-content: flex-end;
+    }
+  }
+
+  .cart-bottom {
+    padding: 10px 12px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+
+    .cart-bottom-left,
+    .cart-bottom-right {
+      width: 100%;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .cart-bottom-right .total-info {
+      min-width: 0;
+
+      .total-price {
+        font-size: 20px;
+      }
+    }
+
+    .cart-bottom-right :deep(.el-button) {
+      flex: 1 1 auto;
+    }
+  }
+}
 </style>

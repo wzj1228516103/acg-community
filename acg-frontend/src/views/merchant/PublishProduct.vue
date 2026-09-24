@@ -242,7 +242,8 @@ onMounted(async () => {
 }
 
 .submit-btn {
-  width: 200px;
+  width: min(200px, 100%);
+  max-width: 100%;
   height: 44px;
   font-size: 16px;
   border-radius: 10px;
@@ -251,6 +252,16 @@ onMounted(async () => {
 
   &:hover {
     opacity: 0.9;
+  }
+}
+
+@media (max-width: 480px) {
+  .publish-page {
+    padding: 20px 12px 40px;
+  }
+
+  .submit-btn {
+    width: 100%;
   }
 }
 </style>

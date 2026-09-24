@@ -191,6 +191,12 @@ onMounted(async () => {
       display: flex;
       gap: 16px;
       justify-content: center;
+      flex-wrap: wrap;
+
+      :deep(.el-button) {
+        min-width: 140px;
+        max-width: 100%;
+      }
     }
   }
 
@@ -419,7 +425,8 @@ onMounted(async () => {
         gap: 10px;
 
         :deep(.el-button) {
-          min-width: 112px;
+          flex: 1 1 140px;
+          min-width: 0;
           padding: 10px 14px;
         }
       }
@@ -514,6 +521,20 @@ onMounted(async () => {
 
         p {
           font-size: 12px;
+        }
+      }
+    }
+  }
+
+  @media (max-width: 480px) {
+    .hero-section {
+      .hero-buttons {
+        flex-direction: column;
+        align-items: stretch;
+
+        :deep(.el-button) {
+          width: 100%;
+          flex-basis: auto;
         }
       }
     }

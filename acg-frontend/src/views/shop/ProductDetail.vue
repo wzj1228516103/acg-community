@@ -259,6 +259,12 @@ onMounted(async () => {
   .action-buttons {
     display: flex;
     gap: 16px;
+    flex-wrap: wrap;
+
+    :deep(.el-button) {
+      flex: 1 1 160px;
+      min-width: 0;
+    }
 
     .buy-now-btn {
       background: linear-gradient(135deg, #ec4899, #a855f7);
@@ -295,6 +301,32 @@ onMounted(async () => {
     img {
       max-width: 100%;
       border-radius: 8px;
+    }
+  }
+}
+
+@media (max-width: 640px) {
+  .product-detail-page {
+    padding: 20px 12px 40px;
+  }
+
+  .detail-main {
+    padding: 16px;
+    border-radius: 14px;
+  }
+
+  .detail-bottom {
+    padding: 16px;
+    border-radius: 14px;
+  }
+
+  .detail-right .action-buttons {
+    flex-direction: column;
+    gap: 10px;
+
+    :deep(.el-button) {
+      width: 100%;
+      flex-basis: auto;
     }
   }
 }
